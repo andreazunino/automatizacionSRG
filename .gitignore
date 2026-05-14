@@ -1,0 +1,12 @@
+node_modules/
+.env
+reports/*
+!reports/.gitkeep
+test-results/*
+!test-results/.gitkeep
+traces/*
+!traces/.gitkeep
+videos/*
+!videos/.gitkeep
+screenshots/*
+!screenshots/.gitkeep

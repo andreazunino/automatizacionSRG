@@ -1,0 +1,24 @@
+{
+  "name": "automatizacion-sgr-e2e",
+  "version": "1.0.0",
+  "description": "Framework base de automatizacion E2E con Playwright, TypeScript, Cucumber, Gherkin y Page Object Model.",
+  "private": true,
+  "scripts": {
+    "test": "cucumber-js",
+    "test:contactos": "cucumber-js tests/features/contactos/**/*.feature --tags \"@contactos and not @no_automatizar and not @cron and not @rpc and not @api_externa and not @bug_bloqueante and not @no_implementado\"",
+    "test:headed": "cross-env HEADLESS=false cucumber-js",
+    "report": "node scripts/open-report.js",
+    "clean": "node scripts/clean.js"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^11.2.0",
+    "@playwright/test": "^1.52.0",
+    "@types/node": "^22.15.0",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.5.0",
+    "playwright": "^1.52.0",
+    "rimraf": "^6.0.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}

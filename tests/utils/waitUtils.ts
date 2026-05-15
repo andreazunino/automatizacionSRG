@@ -4,7 +4,6 @@ import { expect } from '@playwright/test';
 export const waitUtils = {
   async waitForPageReady(page: Page): Promise<void> {
     await page.waitForLoadState('domcontentloaded');
-    await page.waitForLoadState('networkidle');
   },
 
   async waitForVisible(locator: Locator): Promise<void> {

@@ -1,5 +1,6 @@
-import { setWorldConstructor, World, type IWorldOptions } from '@cucumber/cucumber';
+import { setDefaultTimeout, setWorldConstructor, World, type IWorldOptions } from '@cucumber/cucumber';
 import type { BrowserContext, Page } from '@playwright/test';
+import type { PersonaFisicaTestData } from '../fixtures/testData';
 import { ContactosPage } from '../pages/ContactosPage';
 import { LoginPage } from '../pages/LoginPage';
 
@@ -8,6 +9,7 @@ export class CustomWorld extends World {
   page!: Page;
   loginPage!: LoginPage;
   contactosPage!: ContactosPage;
+  currentPersonaFisica?: PersonaFisicaTestData;
 
   constructor(options: IWorldOptions) {
     super(options);
@@ -20,3 +22,4 @@ export class CustomWorld extends World {
 }
 
 setWorldConstructor(CustomWorld);
+setDefaultTimeout(30000);

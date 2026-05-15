@@ -21,7 +21,12 @@ npx.cmd playwright install
 Crear un archivo `.env` a partir de `.env.example`:
 
 ```env
-BASE_URL=https://url-del-ambiente
+BASE_URL=https://atlas-pruebas.odoo.com/web/login?redirect=%2Fodoo%3F
+CONTACTS_URL=https://atlas-pruebas.odoo.com/odoo/contacts
+ADMIN_USER=usuario_admin
+ADMIN_PASSWORD=password_admin
+INTERNAL_USER=usuario_interno
+INTERNAL_PASSWORD=password_interno
 QA_USER=usuario_qa
 QA_PASSWORD=password_qa
 HEADLESS=true

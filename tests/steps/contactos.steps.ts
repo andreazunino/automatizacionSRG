@@ -1,5 +1,5 @@
 import { Then, When } from '@cucumber/cucumber';
-import { testData } from '../fixtures/testData';
+import { createPersonaFisicaTestData, testData } from '../fixtures/testData';
 import type { CustomWorld } from '../support/world';
 
 When('accedo al módulo Contactos', async function (this: CustomWorld) {
@@ -23,11 +23,11 @@ Then('el contacto debería aparecer en la búsqueda', async function (this: Cust
 });
 
 When('busco un contacto existente', async function (this: CustomWorld) {
-  await this.contactosPage.searchContacto(testData.contactos.contactoValido.documento);
+  await this.contactosPage.searchContacto(testData.contactos.contactoExistente.documento);
 });
 
 Then('debería visualizar el contacto en los resultados', async function (this: CustomWorld) {
-  await this.contactosPage.assertContactoAppears(testData.contactos.contactoValido.documento);
+  await this.contactosPage.assertContactoAppears(testData.contactos.contactoExistente.documento);
 });
 
 When('edito un contacto existente', async function (this: CustomWorld) {
@@ -68,4 +68,35 @@ When('intento crear un contacto duplicado', async function (this: CustomWorld) {
 
 Then('debería visualizar el mensaje de contacto duplicado', async function (this: CustomWorld) {
   await this.contactosPage.assertDuplicatedContactoMessage();
+});
+
+When('creo una persona física con todos los campos de identidad', async function (this: CustomWorld) {
+  this.currentPersonaFisica = createPersonaFisicaTestData();
+  await this.contactosPage.createPersonaFisica(this.currentPersonaFisica);
+});
+
+Then('debería visualizar la persona física guardada con nombre completo calculado', async function (
+  this: CustomWorld
+) {
+  if (!this.currentPersonaFisica) {
+    throw new Error('No existe una persona fisica creada en el escenario actual.');
+  }
+
+  await this.contactosPage.assertPersonaFisicaWasSaved(this.currentPersonaFisica);
+});
+
+When('edito el segundo apellido de la persona física', async function (this: CustomWorld) {
+  if (!this.currentPersonaFisica) {
+    throw new Error('No existe una persona fisica creada en el escenario actual.');
+  }
+
+  await this.contactosPage.updateSegundoApellido(this.currentPersonaFisica);
+});
+
+Then('debería visualizar el nombre recalculado de la persona física', async function (this: CustomWorld) {
+  if (!this.currentPersonaFisica) {
+    throw new Error('No existe una persona fisica creada en el escenario actual.');
+  }
+
+  await this.contactosPage.assertPersonaFisicaWasUpdated(this.currentPersonaFisica);
 });

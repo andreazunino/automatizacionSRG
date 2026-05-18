@@ -24,6 +24,40 @@ Característica: Gestión de Contactos
     Cuando edito el segundo apellido de la persona física
     Entonces debería visualizar el nombre recalculado de la persona física
 
+  @per-002
+  Escenario: Intentar guardar persona física sin Nombre ni Primer Apellido
+    Dado que inicio sesión en la aplicación
+    Y accedo al módulo Contactos
+    Cuando intento guardar una persona física sin Nombre ni Primer Apellido
+    Entonces debería visualizar la validación de Nombre y Primer Apellido obligatorios
+
+  @per-003
+  Escenario: Validar NIF y NIE según Tipo de Documento
+    Dado que inicio sesión en la aplicación
+    Y accedo al módulo Contactos
+    Cuando intento guardar una persona física con NIF inválido
+    Entonces debería visualizar la validación de formato de NIF
+    Cuando corrijo el NIF con un valor válido y guardo
+    Entonces debería visualizar la persona física guardada con NIF válido
+    Cuando creo una persona física con NIE válido
+    Entonces debería visualizar la persona física guardada con NIE válido
+
+  @per-006
+  Escenario: Asignar múltiples CNAEs a una empresa y gestionar el CNAE principal
+    Dado que inicio sesión en la aplicación
+    Y accedo al módulo Contactos
+    Cuando creo una empresa para gestionar sus CNAEs
+    Y asigno múltiples CNAEs e intento marcar ambos como principal
+    Entonces debería visualizar ambos CNAEs y un único CNAE principal actualizado
+
+  @per-007
+  Escenario: Gestionar epígrafes IAE con fecha de baja y actividad económica
+    Dado que inicio sesión en la aplicación
+    Y accedo al módulo Contactos
+    Cuando creo una empresa con actividad económica activada
+    Y gestiono epígrafes IAE con fecha de baja
+    Entonces debería visualizar el epígrafe principal activo y el epígrafe secundario inactivo
+
   @no_implementado
   Escenario: Crear contacto
     Dado que inicio sesión en la aplicación

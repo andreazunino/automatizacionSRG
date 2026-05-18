@@ -52,6 +52,39 @@ export interface EmpresaIaeTestData {
   fechaBaja: string;
 }
 
+export interface EmpresaBancoEspanaTestData {
+  nombre: string;
+  situacionBe: string;
+  vinculacionAapp: string;
+  sectorInstitucional: string;
+}
+
+export interface EmpresaDireccionExtendidaTestData {
+  nombre: string;
+  tipoVia: string;
+  numero: string;
+  planta: string;
+  puerta: string;
+  codigoPostal: string;
+}
+
+export interface EmpresaRepresentanteTestData {
+  nombreEmpresa: string;
+  nombreRepresentante: string;
+  tipoVinculacion: string;
+}
+
+export interface EmpresaRegistroMercantilTestData {
+  nombre: string;
+  provinciaInscripcion: string;
+  fechaInscripcion: string;
+  fechaInscripcionFutura: string;
+  tomo: string;
+  folio: string;
+  hoja: string;
+  inscripcion: string;
+}
+
 const NIF_LETTERS = 'TRWAGMYFPDXBNJZSQVHLCKE';
 
 const generateNif = (): string => {
@@ -65,9 +98,20 @@ const uniqueSuffix = (): string => Date.now().toString().slice(-6);
 
 const todayAsSpanishDate = (): string => {
   const today = new Date();
-  const day = today.getDate().toString().padStart(2, '0');
-  const month = (today.getMonth() + 1).toString().padStart(2, '0');
-  const year = today.getFullYear();
+  return toSpanishDate(today);
+};
+
+const futureSpanishDate = (yearsToAdd: number): string => {
+  const date = new Date();
+  date.setFullYear(date.getFullYear() + yearsToAdd);
+
+  return toSpanishDate(date);
+};
+
+const toSpanishDate = (date: Date): string => {
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
 
   return `${day}/${month}/${year}`;
 };
@@ -85,6 +129,15 @@ export const createPersonaFisicaTestData = (): PersonaFisicaTestData => {
     edadEsperada: '46',
     paisNacimiento: 'España',
     sexo: 'Hombre'
+  };
+};
+
+export const createPersonaFisicaConFechaNacimientoFuturaTestData = (): PersonaFisicaTestData => {
+  return {
+    ...createPersonaFisicaTestData(),
+    nombre: `Fecha futura ${uniqueSuffix()}`,
+    fechaNacimiento: futureSpanishDate(1),
+    edadEsperada: ''
   };
 };
 
@@ -130,6 +183,55 @@ export const createEmpresaIaeTestData = (): EmpresaIaeTestData => {
     epigrafeSecundario: '6201',
     fechaInicio: today,
     fechaBaja: today
+  };
+};
+
+export const createEmpresaBancoEspanaTestData = (): EmpresaBancoEspanaTestData => {
+  const suffix = uniqueSuffix();
+
+  return {
+    nombre: `Empresa BE ${suffix}`,
+    situacionBe: 'Activo',
+    vinculacionAapp: 'No',
+    sectorInstitucional: 'Sociedades no financieras'
+  };
+};
+
+export const createEmpresaDireccionExtendidaTestData = (): EmpresaDireccionExtendidaTestData => {
+  const suffix = uniqueSuffix();
+
+  return {
+    nombre: `Empresa Dirección ${suffix}`,
+    tipoVia: 'Calle',
+    numero: '25',
+    planta: '3',
+    puerta: 'B',
+    codigoPostal: '46001'
+  };
+};
+
+export const createEmpresaRepresentanteTestData = (): EmpresaRepresentanteTestData => {
+  const suffix = uniqueSuffix();
+
+  return {
+    nombreEmpresa: `Empresa Representante ${suffix}`,
+    nombreRepresentante: `Representante ${suffix}`,
+    tipoVinculacion: 'Representante'
+  };
+};
+
+export const createEmpresaRegistroMercantilTestData = (): EmpresaRegistroMercantilTestData => {
+  const suffix = uniqueSuffix();
+
+  return {
+    nombre: `Empresa Registro ${suffix}`,
+    provinciaInscripcion: 'Madrid',
+    fechaInscripcion: todayAsSpanishDate(),
+    fechaInscripcionFutura: futureSpanishDate(1),
+    tomo: '250',
+    folio: '75',
+    hoja: `V-${suffix}`,
+    inscripcion: '1'
   };
 };
 

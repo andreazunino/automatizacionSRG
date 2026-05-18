@@ -28,6 +28,10 @@ Before(async function (this: CustomWorld) {
 });
 
 After(async function (this: CustomWorld, scenario) {
+  if (!this.page || !this.context) {
+    return;
+  }
+
   const failed = scenario.result?.status === Status.FAILED;
   const scenarioName = sanitizeName(scenario.pickle.name);
   const video = this.page.video();

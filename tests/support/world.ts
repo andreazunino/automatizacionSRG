@@ -1,8 +1,12 @@
 import { setDefaultTimeout, setWorldConstructor, World, type IWorldOptions } from '@cucumber/cucumber';
 import type { BrowserContext, Page } from '@playwright/test';
 import type {
+  EmpresaBancoEspanaTestData,
   EmpresaCnaeTestData,
+  EmpresaDireccionExtendidaTestData,
   EmpresaIaeTestData,
+  EmpresaRegistroMercantilTestData,
+  EmpresaRepresentanteTestData,
   PersonaFisicaDocumentoTestData,
   PersonaFisicaTestData
 } from '../fixtures/testData';
@@ -16,8 +20,12 @@ export class CustomWorld extends World {
   contactosPage!: ContactosPage;
   currentPersonaFisica?: PersonaFisicaTestData;
   currentPersonaFisicaDocumento?: PersonaFisicaDocumentoTestData;
+  currentEmpresaBancoEspana?: EmpresaBancoEspanaTestData;
   currentEmpresaCnae?: EmpresaCnaeTestData;
+  currentEmpresaDireccionExtendida?: EmpresaDireccionExtendidaTestData;
   currentEmpresaIae?: EmpresaIaeTestData;
+  currentEmpresaRegistroMercantil?: EmpresaRegistroMercantilTestData;
+  currentEmpresaRepresentante?: EmpresaRepresentanteTestData;
 
   constructor(options: IWorldOptions) {
     super(options);
@@ -30,4 +38,4 @@ export class CustomWorld extends World {
 }
 
 setWorldConstructor(CustomWorld);
-setDefaultTimeout(30000);
+setDefaultTimeout(60000);

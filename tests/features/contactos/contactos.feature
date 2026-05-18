@@ -58,6 +58,66 @@ Característica: Gestión de Contactos
     Y gestiono epígrafes IAE con fecha de baja
     Entonces debería visualizar el epígrafe principal activo y el epígrafe secundario inactivo
 
+  @per-010
+  Escenario: Completar campos de Banco de España en una empresa
+    Dado que inicio sesión en la aplicación
+    Y accedo al módulo Contactos
+    Cuando completo los campos de Banco de España en una empresa
+    Entonces debería visualizar los datos de Banco de España guardados correctamente
+
+  @per-011
+  Escenario: Marcar contacto como fallecido y como persona pública
+    Dado que inicio sesión en la aplicación
+    Y accedo al módulo Contactos
+    Cuando creo una persona física para validar indicadores simples
+    Y marco la persona física como fallecida y persona pública
+    Entonces debería visualizar la persona física con los indicadores Fallecido y Persona Pública activos
+
+  @per-012
+  Escenario: Validar que la fecha de nacimiento no puede ser futura
+    Dado que inicio sesión en la aplicación
+    Y accedo al módulo Contactos
+    Cuando intento guardar una persona física con fecha de nacimiento futura
+    Entonces debería visualizar la validación de fecha de nacimiento futura
+
+  @per-013
+  Escenario: Completar dirección con tipo de vía, número, planta y puerta
+    Dado que inicio sesión en la aplicación
+    Y accedo al módulo Contactos
+    Cuando completo la dirección extendida en una empresa
+    Entonces debería visualizar la dirección extendida guardada correctamente
+
+  @per-020
+  Escenario: Verificar que al cambiar el tipo de empresa la interfaz adapta los campos visibles
+    Dado que inicio sesión en la aplicación
+    Y accedo al módulo Contactos
+    Cuando abro el formulario de nuevo contacto
+    Y selecciono tipo Físico y verifico sus campos dinámicos
+    Entonces al cambiar a tipo Jurídico debería visualizar la interfaz de empresa
+
+  @per-022
+  Escenario: Añadir y consultar representante de una persona jurídica
+    Dado que inicio sesión en la aplicación
+    Y accedo al módulo Contactos
+    Cuando añado un representante a una persona jurídica
+    Entonces debería visualizar el representante vinculado a la persona jurídica
+
+  @per-024
+  Escenario: Consultar las relaciones directas e indirectas de una persona desde su ficha
+    Dado que inicio sesión en la aplicación
+    Y accedo al módulo Contactos
+    Cuando preparo una persona jurídica con una relación conocida
+    Entonces debería visualizar las relaciones disponibles en la ficha con las discrepancias actuales
+
+  @per-027
+  Escenario: Completar datos del Registro Mercantil y validar que la fecha de inscripción no es futura
+    Dado que inicio sesión en la aplicación
+    Y accedo al módulo Contactos
+    Cuando completo los datos del Registro Mercantil en una empresa
+    Entonces debería visualizar los datos del Registro Mercantil guardados correctamente
+    Cuando intento guardar una fecha de inscripción futura en el Registro Mercantil
+    Entonces debería visualizar la validación de fecha de inscripción futura
+
   @no_implementado
   Escenario: Crear contacto
     Dado que inicio sesión en la aplicación

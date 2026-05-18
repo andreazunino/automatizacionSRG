@@ -14,8 +14,13 @@ export class LoginPage extends BasePage {
   }
 
   async login(username = env.qaUser, password = env.qaPassword): Promise<void> {
-    await this.fill(selectors.login.usernameInput, username);
-    await this.fill(selectors.login.passwordInput, password);
+    const usernameInput = this.page.locator(selectors.login.usernameInput);
+    const passwordInput = this.page.locator(selectors.login.passwordInput);
+
+    await expect(usernameInput).toBeVisible({ timeout: 30000 });
+    await usernameInput.fill(username);
+    await expect(passwordInput).toBeVisible();
+    await passwordInput.fill(password);
     await this.click(selectors.login.submitButton);
   }
 

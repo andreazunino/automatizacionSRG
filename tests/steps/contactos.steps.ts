@@ -1,7 +1,12 @@
 import { Then, When } from '@cucumber/cucumber';
 import {
+  createEmpresaBancoEspanaTestData,
   createEmpresaCnaeTestData,
+  createEmpresaDireccionExtendidaTestData,
   createEmpresaIaeTestData,
+  createEmpresaRegistroMercantilTestData,
+  createEmpresaRepresentanteTestData,
+  createPersonaFisicaConFechaNacimientoFuturaTestData,
   createPersonaFisicaDocumentoTestData,
   createPersonaFisicaTestData,
   personaFisicaSinNombrePrimerApellido,
@@ -90,6 +95,52 @@ Then('debería visualizar la persona física guardada con nombre completo calcul
   }
 
   await this.contactosPage.assertPersonaFisicaWasSaved(this.currentPersonaFisica);
+});
+
+When('creo una persona física para validar indicadores simples', async function (this: CustomWorld) {
+  this.currentPersonaFisica = createPersonaFisicaTestData();
+  await this.contactosPage.createPersonaFisica(this.currentPersonaFisica);
+});
+
+When('marco la persona física como fallecida y persona pública', async function (this: CustomWorld) {
+  if (!this.currentPersonaFisica) {
+    throw new Error('No existe una persona fisica creada en el escenario actual.');
+  }
+
+  await this.contactosPage.markPersonaFisicaAsFallecidaAndPersonaPublica();
+});
+
+Then('debería visualizar la persona física con los indicadores Fallecido y Persona Pública activos', async function (
+  this: CustomWorld
+) {
+  if (!this.currentPersonaFisica) {
+    throw new Error('No existe una persona fisica creada en el escenario actual.');
+  }
+
+  await this.contactosPage.assertPersonaFisicaFallecidaAndPersonaPublica();
+});
+
+When('intento guardar una persona física con fecha de nacimiento futura', async function (this: CustomWorld) {
+  this.currentPersonaFisica = createPersonaFisicaConFechaNacimientoFuturaTestData();
+  await this.contactosPage.trySavePersonaFisicaWithFutureBirthDate(this.currentPersonaFisica);
+});
+
+Then('debería visualizar la validación de fecha de nacimiento futura', async function (this: CustomWorld) {
+  await this.contactosPage.assertFutureBirthDateValidation();
+});
+
+When('abro el formulario de nuevo contacto', async function (this: CustomWorld) {
+  await this.contactosPage.openNewContactForm();
+});
+
+When('selecciono tipo Físico y verifico sus campos dinámicos', async function (this: CustomWorld) {
+  await this.contactosPage.selectPersonaFisicaTypeAndAssertDynamicFields();
+});
+
+Then('al cambiar a tipo Jurídico debería visualizar la interfaz de empresa', async function (
+  this: CustomWorld
+) {
+  await this.contactosPage.selectPersonaJuridicaTypeAndAssertDynamicFields();
 });
 
 When('edito el segundo apellido de la persona física', async function (this: CustomWorld) {
@@ -182,6 +233,80 @@ Then('debería visualizar ambos CNAEs y un único CNAE principal actualizado', a
   await this.contactosPage.assertMultipleCnaesAndSinglePrincipal(this.currentEmpresaCnae);
 });
 
+When('completo la dirección extendida en una empresa', async function (this: CustomWorld) {
+  this.currentEmpresaDireccionExtendida = createEmpresaDireccionExtendidaTestData();
+  await this.contactosPage.createEmpresaConDireccionExtendida(this.currentEmpresaDireccionExtendida);
+});
+
+Then('debería visualizar la dirección extendida guardada correctamente', async function (
+  this: CustomWorld
+) {
+  if (!this.currentEmpresaDireccionExtendida) {
+    throw new Error('No existe una empresa con direccion extendida en el escenario actual.');
+  }
+
+  await this.contactosPage.assertDireccionExtendidaWasSaved(this.currentEmpresaDireccionExtendida);
+});
+
+When('añado un representante a una persona jurídica', async function (this: CustomWorld) {
+  this.currentEmpresaRepresentante = createEmpresaRepresentanteTestData();
+  await this.contactosPage.createEmpresaConRepresentante(this.currentEmpresaRepresentante);
+});
+
+Then('debería visualizar el representante vinculado a la persona jurídica', async function (
+  this: CustomWorld
+) {
+  if (!this.currentEmpresaRepresentante) {
+    throw new Error('No existe una empresa con representante en el escenario actual.');
+  }
+
+  await this.contactosPage.assertRepresentanteWasLinked(this.currentEmpresaRepresentante);
+});
+
+When('preparo una persona jurídica con una relación conocida', async function (this: CustomWorld) {
+  this.currentEmpresaRepresentante = createEmpresaRepresentanteTestData();
+  await this.contactosPage.createEmpresaConRepresentante(this.currentEmpresaRepresentante);
+});
+
+Then('debería visualizar las relaciones disponibles en la ficha con las discrepancias actuales', async function (
+  this: CustomWorld
+) {
+  if (!this.currentEmpresaRepresentante) {
+    throw new Error('No existe una empresa con relaciones en el escenario actual.');
+  }
+
+  await this.contactosPage.assertRelacionesDisponiblesEnFicha(this.currentEmpresaRepresentante);
+});
+
+When('completo los datos del Registro Mercantil en una empresa', async function (this: CustomWorld) {
+  this.currentEmpresaRegistroMercantil = createEmpresaRegistroMercantilTestData();
+  await this.contactosPage.createEmpresaConRegistroMercantil(this.currentEmpresaRegistroMercantil);
+});
+
+Then('debería visualizar los datos del Registro Mercantil guardados correctamente', async function (
+  this: CustomWorld
+) {
+  if (!this.currentEmpresaRegistroMercantil) {
+    throw new Error('No existe una empresa con datos de Registro Mercantil en el escenario actual.');
+  }
+
+  await this.contactosPage.assertRegistroMercantilWasSaved(this.currentEmpresaRegistroMercantil);
+});
+
+When('intento guardar una fecha de inscripción futura en el Registro Mercantil', async function (
+  this: CustomWorld
+) {
+  if (!this.currentEmpresaRegistroMercantil) {
+    throw new Error('No existe una empresa con datos de Registro Mercantil en el escenario actual.');
+  }
+
+  await this.contactosPage.trySaveRegistroMercantilWithFutureDate(this.currentEmpresaRegistroMercantil);
+});
+
+Then('debería visualizar la validación de fecha de inscripción futura', async function (this: CustomWorld) {
+  await this.contactosPage.assertFutureRegistroMercantilDateValidation();
+});
+
 When('creo una empresa con actividad económica activada', async function (this: CustomWorld) {
   this.currentEmpresaIae = createEmpresaIaeTestData();
   await this.contactosPage.createEmpresaConActividadEconomica(this.currentEmpresaIae);
@@ -203,4 +328,19 @@ Then('debería visualizar el epígrafe principal activo y el epígrafe secundari
   }
 
   await this.contactosPage.assertIaeEpigrafeActivationState(this.currentEmpresaIae);
+});
+
+When('completo los campos de Banco de España en una empresa', async function (this: CustomWorld) {
+  this.currentEmpresaBancoEspana = createEmpresaBancoEspanaTestData();
+  await this.contactosPage.createEmpresaConDatosBancoEspana(this.currentEmpresaBancoEspana);
+});
+
+Then('debería visualizar los datos de Banco de España guardados correctamente', async function (
+  this: CustomWorld
+) {
+  if (!this.currentEmpresaBancoEspana) {
+    throw new Error('No existe una empresa con datos de Banco de España en el escenario actual.');
+  }
+
+  await this.contactosPage.assertBancoEspanaDataWasSaved(this.currentEmpresaBancoEspana);
 });

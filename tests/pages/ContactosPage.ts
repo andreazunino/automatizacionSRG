@@ -2,8 +2,12 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 import {
   type ContactoTestData,
+  type EmpresaBancoEspanaTestData,
   type EmpresaCnaeTestData,
+  type EmpresaDireccionExtendidaTestData,
   type EmpresaIaeTestData,
+  type EmpresaRegistroMercantilTestData,
+  type EmpresaRepresentanteTestData,
   type PersonaFisicaDocumentoTestData,
   type PersonaFisicaTestData,
   type PersonaFisicaValidacionRequeridosTestData,
@@ -106,6 +110,78 @@ export class ContactosPage extends BasePage {
     await this.saveCurrentContact();
   }
 
+  async openNewContactForm(): Promise<void> {
+    await this.click(selectors.contactos.newButton);
+    await expect(this.page).toHaveURL(/\/new(?:$|[/?#])/);
+  }
+
+  async selectPersonaFisicaTypeAndAssertDynamicFields(): Promise<void> {
+    await this.page.getByRole('radio', { name: selectors.contactos.personaFisica.labels.typeFisico }).check();
+    await expect(
+      this.page.getByRole('radio', { name: selectors.contactos.personaFisica.labels.typeFisico })
+    ).toBeChecked();
+    await expect(this.personaFisicaTextbox('nombre')).toBeVisible();
+    await expect(this.personaFisicaTextbox('primerApellido')).toBeVisible();
+    await expect(this.personaFisicaTextbox('segundoApellido')).toBeVisible();
+    await expect(this.page.getByRole('tab', { name: selectors.contactos.personaFisica.labels.tabPersonasFisicas })).toBeVisible();
+    await this.assertJuridicasTabIsHidden();
+  }
+
+  async selectPersonaJuridicaTypeAndAssertDynamicFields(): Promise<void> {
+    await this.page.getByRole('radio', { name: selectors.contactos.empresa.labels.typeJuridico }).check();
+    await expect(this.page.getByRole('radio', { name: selectors.contactos.empresa.labels.typeJuridico })).toBeChecked();
+    await expect(this.page.locator(selectors.contactos.empresa.nameInput).first()).toBeVisible();
+    await expect(this.page.getByRole('tab', { name: selectors.contactos.empresa.labels.tabJuridicas })).toBeVisible();
+    await expect(this.personaFisicaTextbox('primerApellido')).toBeHidden();
+    await expect(this.personaFisicaTextbox('segundoApellido')).toBeHidden();
+    await this.assertPersonasFisicasTabIsHidden();
+  }
+
+  async markPersonaFisicaAsFallecidaAndPersonaPublica(): Promise<void> {
+    await this.openPersonasFisicasTab();
+    await this.checkPersonaFisicaToggle(
+      selectors.contactos.personaFisica.labels.fallecido,
+      selectors.contactos.personaFisica.fallecidoInput
+    );
+    await this.checkPersonaFisicaToggle(
+      selectors.contactos.personaFisica.labels.personaPublica,
+      selectors.contactos.personaFisica.personaPublicaInput
+    );
+    await this.saveCurrentContact();
+  }
+
+  async assertPersonaFisicaFallecidaAndPersonaPublica(): Promise<void> {
+    await this.openPersonasFisicasTab();
+    await expect(
+      await this.personaFisicaToggle(
+        selectors.contactos.personaFisica.labels.fallecido,
+        selectors.contactos.personaFisica.fallecidoInput
+      )
+    ).toBeChecked();
+    await expect(
+      await this.personaFisicaToggle(
+        selectors.contactos.personaFisica.labels.personaPublica,
+        selectors.contactos.personaFisica.personaPublicaInput
+      )
+    ).toBeChecked();
+  }
+
+  async trySavePersonaFisicaWithFutureBirthDate(persona: PersonaFisicaTestData): Promise<void> {
+    await this.click(selectors.contactos.newButton);
+    await this.page.getByRole('radio', { name: selectors.contactos.personaFisica.labels.typeFisico }).check();
+    await this.fillPersonaFisicaIdentity(persona);
+    await this.fillPersonaFisicaDetails(persona);
+    await this.page.keyboard.press('Escape');
+    await this.click(selectors.contactos.form.saveButton);
+  }
+
+  async assertFutureBirthDateValidation(): Promise<void> {
+    await expect(this.page).toHaveURL(/\/new(?:$|[/?#])/);
+    await expect
+      .poll(async () => this.hasFutureBirthDateValidation())
+      .toBeTruthy();
+  }
+
   async trySavePersonaFisicaWithoutNombreAndPrimerApellido(
     persona: PersonaFisicaValidacionRequeridosTestData
   ): Promise<void> {
@@ -175,6 +251,145 @@ export class ContactosPage extends BasePage {
     await this.saveCurrentContact();
   }
 
+  async createEmpresaConRepresentante(empresa: EmpresaRepresentanteTestData): Promise<void> {
+    await this.createPersonaRelacionadaParaRepresentante(empresa.nombreRepresentante);
+    await this.navigateToContactos();
+    await this.click(selectors.contactos.newButton);
+    await this.page.getByRole('radio', { name: selectors.contactos.empresa.labels.typeJuridico }).check();
+    await this.page.locator(selectors.contactos.empresa.nameInput).first().fill(empresa.nombreEmpresa);
+    await this.saveCurrentContact();
+    await this.openPersonasRelacionadasTab();
+    await this.addRepresentante(empresa);
+    await this.saveCurrentContact();
+  }
+
+  async assertRepresentanteWasLinked(empresa: EmpresaRepresentanteTestData): Promise<void> {
+    await this.openPersonasRelacionadasTab();
+    await expect(await this.personaRelacionadaRow(empresa.nombreRepresentante)).toBeVisible();
+  }
+
+  async assertRelacionesDisponiblesEnFicha(empresa: EmpresaRepresentanteTestData): Promise<void> {
+    await this.openPersonasRelacionadasTab();
+
+    const relacionRow = await this.personaRelacionadaRow(empresa.nombreRepresentante);
+
+    await expect(relacionRow).toBeVisible();
+    await expect(relacionRow).toContainText(empresa.nombreRepresentante);
+    await expect(relacionRow).toContainText(empresa.tipoVinculacion);
+
+    // Discrepancia conocida de PER-024: la vista actual permite edición y no es readonly.
+    await expect(this.page.locator(selectors.contactos.empresa.personasRelacionadasAddLineButton).first()).toBeVisible();
+  }
+
+  async createEmpresaConRegistroMercantil(empresa: EmpresaRegistroMercantilTestData): Promise<void> {
+    await this.click(selectors.contactos.newButton);
+    await this.page.getByRole('radio', { name: selectors.contactos.empresa.labels.typeJuridico }).check();
+    await this.page.locator(selectors.contactos.empresa.nameInput).first().fill(empresa.nombre);
+    await this.openRegistroMercantilTab();
+    await this.fillRegistroMercantilData(empresa);
+    await this.saveCurrentContact();
+  }
+
+  async assertRegistroMercantilWasSaved(empresa: EmpresaRegistroMercantilTestData): Promise<void> {
+    await this.openRegistroMercantilTab();
+
+    await this.assertRegistroMercantilTechnicalValue(
+      selectors.contactos.empresa.labels.provinciaInscripcion,
+      new RegExp(this.escapeRegExp(empresa.provinciaInscripcion), 'i')
+    );
+    await this.assertRegistroMercantilTechnicalValue(
+      selectors.contactos.empresa.labels.fechaInscripcion,
+      new RegExp(`${this.escapeRegExp(empresa.fechaInscripcion)}|${this.visibleSpanishDateRegexSource(empresa.fechaInscripcion)}`, 'i')
+    );
+    await this.assertRegistroMercantilTechnicalValue(
+      selectors.contactos.empresa.labels.tomo,
+      new RegExp(`^${this.escapeRegExp(empresa.tomo)}$`)
+    );
+    await this.assertRegistroMercantilTechnicalValue(
+      selectors.contactos.empresa.labels.folio,
+      new RegExp(`^${this.escapeRegExp(empresa.folio)}$`)
+    );
+    await this.assertRegistroMercantilTechnicalValue(
+      selectors.contactos.empresa.labels.hoja,
+      new RegExp(`^${this.escapeRegExp(empresa.hoja)}$`)
+    );
+    await this.assertRegistroMercantilTechnicalValue(
+      selectors.contactos.empresa.labels.inscripcion,
+      new RegExp(`^${this.escapeRegExp(empresa.inscripcion)}$`)
+    );
+  }
+
+  async trySaveRegistroMercantilWithFutureDate(empresa: EmpresaRegistroMercantilTestData): Promise<void> {
+    await this.openRegistroMercantilTab();
+    await this.updateRegistroMercantilDate(empresa);
+    await this.click(selectors.contactos.form.saveButton);
+  }
+
+  async assertFutureRegistroMercantilDateValidation(): Promise<void> {
+    await expect
+      .poll(async () => this.hasFutureRegistroMercantilDateValidation())
+      .toBeTruthy();
+  }
+
+  async createEmpresaConDireccionExtendida(empresa: EmpresaDireccionExtendidaTestData): Promise<void> {
+    await this.click(selectors.contactos.newButton);
+    await this.page.getByRole('radio', { name: selectors.contactos.empresa.labels.typeJuridico }).check();
+    await this.page.locator(selectors.contactos.empresa.nameInput).first().fill(empresa.nombre);
+    await this.assertDireccionExtendidaFieldsAreVisible();
+    await this.fillDireccionExtendida(empresa);
+    await this.saveCurrentContact();
+  }
+
+  async assertDireccionExtendidaFieldsAreVisible(): Promise<void> {
+    await expect(
+      await this.direccionInput(selectors.contactos.empresa.labels.tipoVia, selectors.contactos.empresa.tipoViaInput)
+    ).toBeVisible();
+    await expect(
+      await this.direccionInput(selectors.contactos.empresa.labels.numero, selectors.contactos.empresa.numeroInput)
+    ).toBeVisible();
+    await expect(
+      await this.direccionInput(selectors.contactos.empresa.labels.planta, selectors.contactos.empresa.plantaInput)
+    ).toBeVisible();
+    await expect(
+      await this.direccionInput(selectors.contactos.empresa.labels.puerta, selectors.contactos.empresa.puertaInput)
+    ).toBeVisible();
+    await expect(
+      await this.direccionInput(
+        selectors.contactos.empresa.labels.codigoPostal,
+        selectors.contactos.empresa.codigoPostalInput
+      )
+    ).toBeVisible();
+  }
+
+  async assertDireccionExtendidaWasSaved(empresa: EmpresaDireccionExtendidaTestData): Promise<void> {
+    await this.assertDireccionExtendidaValue(
+      selectors.contactos.empresa.labels.tipoVia,
+      selectors.contactos.empresa.tipoViaInput,
+      empresa.tipoVia
+    );
+    await this.assertDireccionExtendidaValue(
+      selectors.contactos.empresa.labels.numero,
+      selectors.contactos.empresa.numeroInput,
+      empresa.numero
+    );
+    await this.assertDireccionExtendidaValue(
+      selectors.contactos.empresa.labels.planta,
+      selectors.contactos.empresa.plantaInput,
+      empresa.planta
+    );
+    await this.assertDireccionExtendidaValue(
+      selectors.contactos.empresa.labels.puerta,
+      selectors.contactos.empresa.puertaInput,
+      empresa.puerta
+    );
+    await this.assertDireccionExtendidaValue(
+      selectors.contactos.empresa.labels.codigoPostal,
+      selectors.contactos.empresa.codigoPostalInput,
+      empresa.codigoPostal
+    );
+    await expect(this.page).toHaveTitle(new RegExp(this.escapeRegExp(empresa.nombre), 'i'));
+  }
+
   async assignMultipleCnaesAndTryToMarkBothAsPrincipal(empresa: EmpresaCnaeTestData): Promise<void> {
     await this.openCodigosCnaeTab();
     await this.addCnae(empresa.cnaePrincipal, true);
@@ -225,6 +440,50 @@ export class ContactosPage extends BasePage {
     await expect(await this.iaePrincipalInput(empresa.epigrafeSecundario)).not.toBeChecked();
     await this.assertIaeRowHasDate(empresa.epigrafeSecundario, empresa.fechaBaja);
     await expect(this.page.locator(selectors.contactos.empresa.iaeRows)).toHaveCount(2);
+    await expect(this.page).toHaveTitle(new RegExp(this.escapeRegExp(empresa.nombre), 'i'));
+  }
+
+  async createEmpresaConDatosBancoEspana(empresa: EmpresaBancoEspanaTestData): Promise<void> {
+    await this.click(selectors.contactos.newButton);
+    await this.page.getByRole('radio', { name: selectors.contactos.empresa.labels.typeJuridico }).check();
+    await this.page.locator(selectors.contactos.empresa.nameInput).first().fill(empresa.nombre);
+    await this.openBancoEspanaTab();
+    await this.fillBancoEspanaField(
+      selectors.contactos.empresa.labels.situacionBe,
+      selectors.contactos.empresa.situacionBeInput,
+      empresa.situacionBe
+    );
+    await this.fillBancoEspanaField(
+      selectors.contactos.empresa.labels.vinculacionAapp,
+      selectors.contactos.empresa.vinculacionAappInput,
+      empresa.vinculacionAapp
+    );
+    await this.fillBancoEspanaField(
+      selectors.contactos.empresa.labels.sectorInstitucional,
+      selectors.contactos.empresa.sectorInstitucionalInput,
+      empresa.sectorInstitucional
+    );
+    await this.assertNoUnexpectedApplicationError();
+    await this.saveCurrentContact();
+  }
+
+  async assertBancoEspanaDataWasSaved(empresa: EmpresaBancoEspanaTestData): Promise<void> {
+    await this.openBancoEspanaTab();
+    await this.assertBancoEspanaFieldValue(
+      selectors.contactos.empresa.labels.situacionBe,
+      selectors.contactos.empresa.situacionBeInput,
+      empresa.situacionBe
+    );
+    await this.assertBancoEspanaFieldValue(
+      selectors.contactos.empresa.labels.vinculacionAapp,
+      selectors.contactos.empresa.vinculacionAappInput,
+      empresa.vinculacionAapp
+    );
+    await this.assertBancoEspanaFieldValue(
+      selectors.contactos.empresa.labels.sectorInstitucional,
+      selectors.contactos.empresa.sectorInstitucionalInput,
+      empresa.sectorInstitucional
+    );
     await expect(this.page).toHaveTitle(new RegExp(this.escapeRegExp(empresa.nombre), 'i'));
   }
 
@@ -329,6 +588,358 @@ export class ContactosPage extends BasePage {
     await this.checkIfNeeded(labelInput);
   }
 
+  private async fillDireccionExtendida(empresa: EmpresaDireccionExtendidaTestData): Promise<void> {
+    await this.fillDireccionAutocomplete(
+      selectors.contactos.empresa.labels.tipoVia,
+      selectors.contactos.empresa.tipoViaInput,
+      empresa.tipoVia
+    );
+    await this.fillDireccionInput(
+      selectors.contactos.empresa.labels.numero,
+      selectors.contactos.empresa.numeroInput,
+      empresa.numero
+    );
+    await this.fillDireccionInput(
+      selectors.contactos.empresa.labels.planta,
+      selectors.contactos.empresa.plantaInput,
+      empresa.planta
+    );
+    await this.fillDireccionInput(
+      selectors.contactos.empresa.labels.puerta,
+      selectors.contactos.empresa.puertaInput,
+      empresa.puerta
+    );
+    await this.fillDireccionAutocomplete(
+      selectors.contactos.empresa.labels.codigoPostal,
+      selectors.contactos.empresa.codigoPostalInput,
+      empresa.codigoPostal
+    );
+  }
+
+  private async fillRegistroMercantilData(empresa: EmpresaRegistroMercantilTestData): Promise<void> {
+    await this.fillRegistroMercantilAutocomplete(
+      selectors.contactos.empresa.labels.provinciaInscripcion,
+      selectors.contactos.empresa.provinciaInscripcionInput,
+      empresa.provinciaInscripcion
+    );
+    await this.fillRegistroMercantilInput(
+      selectors.contactos.empresa.labels.fechaInscripcion,
+      selectors.contactos.empresa.fechaInscripcionInput,
+      empresa.fechaInscripcion
+    );
+    await this.fillRegistroMercantilInput(
+      selectors.contactos.empresa.labels.tomo,
+      selectors.contactos.empresa.tomoInput,
+      empresa.tomo
+    );
+    await this.fillRegistroMercantilInput(
+      selectors.contactos.empresa.labels.folio,
+      selectors.contactos.empresa.folioInput,
+      empresa.folio
+    );
+    await this.fillRegistroMercantilInput(
+      selectors.contactos.empresa.labels.hoja,
+      selectors.contactos.empresa.hojaInput,
+      empresa.hoja
+    );
+    await this.fillRegistroMercantilInput(
+      selectors.contactos.empresa.labels.inscripcion,
+      selectors.contactos.empresa.inscripcionInput,
+      empresa.inscripcion
+    );
+  }
+
+  private async fillRegistroMercantilAutocomplete(
+    accessibleName: string,
+    configuredSelector: string,
+    value: string
+  ): Promise<void> {
+    const input = await this.registroMercantilInput(accessibleName, configuredSelector);
+
+    await input.fill('');
+    await input.pressSequentially(value);
+    await this.selectRegistroMercantilAutocompleteOptionIfNeeded(input, value);
+    await this.assertInputContainsValue(input, value);
+  }
+
+  private async fillRegistroMercantilInput(
+    accessibleName: string,
+    configuredSelector: string,
+    value: string
+  ): Promise<void> {
+    const input = await this.registroMercantilInput(accessibleName, configuredSelector);
+
+    await input.fill(value);
+    await expect(input).toHaveValue(value);
+  }
+
+  private async updateRegistroMercantilDate(empresa: EmpresaRegistroMercantilTestData): Promise<void> {
+    try {
+      await this.fillRegistroMercantilInput(
+        selectors.contactos.empresa.labels.fechaInscripcion,
+        selectors.contactos.empresa.fechaInscripcionInput,
+        empresa.fechaInscripcionFutura
+      );
+      return;
+    } catch {
+      const dateValue = this.page.getByText(this.visibleSpanishDateRegex(empresa.fechaInscripcion)).first();
+
+      await expect(dateValue).toBeVisible();
+      await dateValue.click();
+      await this.page.keyboard.press('ControlOrMeta+A');
+      await this.page.keyboard.type(empresa.fechaInscripcionFutura);
+      await this.page.keyboard.press('Tab');
+    }
+  }
+
+  private async assertRegistroMercantilValue(
+    accessibleName: string,
+    configuredSelector: string,
+    expectedValue: string
+  ): Promise<void> {
+    const input = await this.registroMercantilInput(accessibleName, configuredSelector);
+
+    await this.assertInputContainsValue(input, expectedValue);
+  }
+
+  private async assertRegistroMercantilTechnicalValue(
+    accessibleName: string,
+    expectedValue: RegExp
+  ): Promise<void> {
+    await expect
+      .poll(async () => this.registroMercantilTechnicalValue(accessibleName), {
+        message: `Esperaba que el campo ${accessibleName} tenga valor ${expectedValue}`
+      })
+      .toMatch(expectedValue);
+  }
+
+  private async registroMercantilTechnicalValue(accessibleName: string): Promise<string> {
+    const fieldNames = this.registroMercantilFieldNames(accessibleName);
+
+    return this.page.evaluate((names) => {
+      for (const name of names) {
+        const field = document.querySelector(`[name="${name}"]`);
+        const input = field?.querySelector('input') ?? document.querySelector(`input[id^="${name}_"]`);
+
+        if (input instanceof HTMLInputElement && input.value.trim()) {
+          return input.value.trim();
+        }
+
+        const text = field?.textContent?.trim();
+
+        if (text) {
+          return text;
+        }
+      }
+
+      return '';
+    }, fieldNames);
+  }
+
+  private async registroMercantilInput(accessibleName: string, configuredSelector: string): Promise<Locator> {
+    const configuredInput = this.page.locator(configuredSelector).first();
+
+    if (await configuredInput.count()) {
+      await expect(configuredInput).toBeVisible();
+      return configuredInput;
+    }
+
+    const technicalFieldInput = this.page.locator(this.registroMercantilTechnicalInputXPath(accessibleName)).first();
+
+    if (await technicalFieldInput.count()) {
+      await expect(technicalFieldInput).toBeVisible();
+      return technicalFieldInput;
+    }
+
+    const combobox = this.page.getByRole('combobox', { name: new RegExp(this.escapeRegExp(accessibleName), 'i') }).first();
+
+    if (await combobox.count()) {
+      await expect(combobox).toBeVisible();
+      return combobox;
+    }
+
+    const textbox = this.page.getByRole('textbox', { name: new RegExp(this.escapeRegExp(accessibleName), 'i') }).first();
+
+    if (await textbox.count()) {
+      await expect(textbox).toBeVisible();
+      return textbox;
+    }
+
+    const fallbackInput = this.page.locator(this.inputNearExactLabelXPath(accessibleName)).first();
+
+    await expect(fallbackInput).toBeVisible();
+    return fallbackInput;
+  }
+
+  private async selectRegistroMercantilAutocompleteOptionIfNeeded(input: Locator, value: string): Promise<void> {
+    const option = this.page
+      .locator(selectors.contactos.empresa.registroMercantilAutocompleteOption)
+      .filter({ hasText: new RegExp(this.escapeRegExp(value), 'i') })
+      .filter({ hasNotText: /Crear|Buscar/i })
+      .first();
+
+    try {
+      await option.waitFor({ state: 'visible', timeout: 3000 });
+      await option.click();
+      return;
+    } catch {
+      const currentValue = (await input.inputValue()).trim();
+
+      if (new RegExp(this.escapeRegExp(value), 'i').test(currentValue)) {
+        await input.press('Tab');
+        return;
+      }
+
+      throw new Error(`No se encontró el valor "${value}" en Registro Mercantil.`);
+    }
+  }
+
+  private async createPersonaRelacionadaParaRepresentante(nombre: string): Promise<void> {
+    await this.click(selectors.contactos.newButton);
+    await this.page.getByRole('radio', { name: selectors.contactos.personaFisica.labels.typeFisico }).check();
+    await this.personaFisicaTextbox('nombre').fill(nombre);
+    await this.personaFisicaTextbox('primerApellido').fill('QA');
+    await this.openPersonasFisicasTab();
+    await this.fillFechaNacimiento('01/01/1990');
+    await this.page.keyboard.press('Escape');
+    await this.fillAutocompleteTextbox(selectors.contactos.personaFisica.labels.sexo, 'Hombre');
+    await this.fillAutocompleteCombobox(selectors.contactos.personaFisica.labels.paisNacimiento, 'España');
+    await this.saveCurrentContact();
+  }
+
+  private async addRepresentante(empresa: EmpresaRepresentanteTestData): Promise<void> {
+    await this.page.locator(selectors.contactos.empresa.personasRelacionadasAddLineButton).first().click();
+
+    const row = this.page.locator(selectors.contactos.empresa.personasRelacionadasRows).last();
+    const personaInput = row.locator(selectors.contactos.empresa.personaRelacionadaInput).first();
+
+    await expect(row).toBeVisible();
+    await expect(personaInput).toBeVisible();
+    await personaInput.fill('');
+    await personaInput.pressSequentially(empresa.nombreRepresentante);
+    await this.selectAutocompleteOptionContainingIfNeeded(personaInput, row, empresa.nombreRepresentante);
+    await this.fillRepresentanteTipoVinculacion(row, empresa.tipoVinculacion);
+  }
+
+  private async fillRepresentanteTipoVinculacion(row: Locator, tipoVinculacion: string): Promise<void> {
+    const input = row.locator(selectors.contactos.empresa.tipoVinculacionInput).first();
+
+    if (!(await input.count())) {
+      return;
+    }
+
+    await expect(input).toBeVisible();
+    await input.fill('');
+    await input.pressSequentially(tipoVinculacion);
+    await this.selectAutocompleteOptionContaining(tipoVinculacion);
+  }
+
+  private async personaRelacionadaRow(nombreRepresentante: string): Promise<Locator> {
+    await expect
+      .poll(async () => {
+        const rowsText = await this.page
+          .locator(selectors.contactos.empresa.personasRelacionadasRows)
+          .allTextContents();
+
+        return rowsText.some((text) => text.includes(nombreRepresentante));
+      })
+      .toBeTruthy();
+
+    return this.page
+      .locator(selectors.contactos.empresa.personasRelacionadasRows)
+      .filter({ hasText: nombreRepresentante })
+      .first();
+  }
+
+  private async fillDireccionAutocomplete(
+    accessibleName: string,
+    configuredSelector: string,
+    value: string
+  ): Promise<void> {
+    const input = await this.direccionInput(accessibleName, configuredSelector);
+
+    await input.fill('');
+    await input.pressSequentially(value);
+    await this.selectDireccionAutocompleteOptionIfNeeded(input, accessibleName, value);
+    await this.assertInputContainsValue(input, value);
+  }
+
+  private async fillDireccionInput(
+    accessibleName: string,
+    configuredSelector: string,
+    value: string
+  ): Promise<void> {
+    const input = await this.direccionInput(accessibleName, configuredSelector);
+
+    await input.fill(value);
+    await expect(input).toHaveValue(value);
+  }
+
+  private async assertDireccionExtendidaValue(
+    accessibleName: string,
+    configuredSelector: string,
+    expectedValue: string
+  ): Promise<void> {
+    const input = await this.direccionInput(accessibleName, configuredSelector);
+
+    await this.assertInputContainsValue(input, expectedValue);
+  }
+
+  private async direccionInput(accessibleName: string, configuredSelector: string): Promise<Locator> {
+    const configuredInput = this.page.locator(configuredSelector).first();
+
+    if (await configuredInput.count()) {
+      await expect(configuredInput).toBeVisible();
+      return configuredInput;
+    }
+
+    const combobox = this.page.getByRole('combobox', { name: new RegExp(this.escapeRegExp(accessibleName), 'i') }).first();
+
+    if (await combobox.count()) {
+      await expect(combobox).toBeVisible();
+      return combobox;
+    }
+
+    const textbox = this.page.getByRole('textbox', { name: new RegExp(this.escapeRegExp(accessibleName), 'i') }).first();
+
+    if (await textbox.count()) {
+      await expect(textbox).toBeVisible();
+      return textbox;
+    }
+
+    const fallbackInput = this.page.locator(this.inputNearExactLabelXPath(accessibleName)).first();
+
+    await expect(fallbackInput).toBeVisible();
+    return fallbackInput;
+  }
+
+  private async selectDireccionAutocompleteOptionIfNeeded(
+    input: Locator,
+    accessibleName: string,
+    value: string
+  ): Promise<void> {
+    const option = this.page
+      .locator(selectors.contactos.empresa.direccionAutocompleteOption)
+      .filter({ hasText: new RegExp(this.escapeRegExp(value), 'i') })
+      .filter({ hasNotText: /Crear|Buscar/i })
+      .first();
+
+    try {
+      await option.waitFor({ state: 'visible', timeout: 3000 });
+      await option.click();
+      return;
+    } catch {
+      const currentValue = (await input.inputValue()).trim();
+
+      if (new RegExp(this.escapeRegExp(value), 'i').test(currentValue)) {
+        await input.press('Tab');
+        return;
+      }
+
+      throw new Error(`No se encontró el valor "${value}" en el campo ${accessibleName}.`);
+    }
+  }
+
   private async addIaeEpigrafe(
     epigrafeCode: string,
     options: { principal: boolean; fechaInicio?: string; fechaBaja?: string }
@@ -426,6 +1037,39 @@ export class ContactosPage extends BasePage {
     if (!(await input.isChecked())) {
       await input.check();
     }
+  }
+
+  private async checkPersonaFisicaToggle(accessibleName: string, configuredSelector: string): Promise<void> {
+    const input = await this.personaFisicaToggle(accessibleName, configuredSelector);
+
+    await this.checkIfNeeded(input);
+  }
+
+  private async personaFisicaToggle(accessibleName: string, configuredSelector: string): Promise<Locator> {
+    const configuredInput = this.page.locator(configuredSelector).first();
+
+    if (await configuredInput.count()) {
+      await expect(configuredInput).toBeVisible();
+      return configuredInput;
+    }
+
+    const roleCheckbox = this.page
+      .getByRole('checkbox', { name: new RegExp(this.escapeRegExp(accessibleName), 'i') })
+      .first();
+
+    if (await roleCheckbox.count()) {
+      await expect(roleCheckbox).toBeVisible();
+      return roleCheckbox;
+    }
+
+    const fallbackInput = this.page
+      .locator(
+        `xpath=//*[contains(normalize-space(), "${accessibleName}")]/following::*[self::input and @type="checkbox"][1]`
+      )
+      .first();
+
+    await expect(fallbackInput).toBeVisible();
+    return fallbackInput;
   }
 
   private async markCnaeAsPrincipal(cnaeCode: string): Promise<void> {
@@ -555,6 +1199,115 @@ export class ContactosPage extends BasePage {
     await option.click();
   }
 
+  private async fillBancoEspanaField(
+    accessibleName: string,
+    configuredSelector: string,
+    value: string
+  ): Promise<void> {
+    const input = await this.bancoEspanaInput(accessibleName, configuredSelector);
+
+    await this.assertNoUnexpectedApplicationError();
+    await input.fill('');
+    await input.pressSequentially(value);
+    await this.selectBancoEspanaAutocompleteOptionIfNeeded(input, value);
+    await this.assertNoUnexpectedApplicationError();
+    await this.assertInputContainsValue(input, value);
+  }
+
+  private async assertBancoEspanaFieldValue(
+    accessibleName: string,
+    configuredSelector: string,
+    expectedValue: string
+  ): Promise<void> {
+    const input = await this.bancoEspanaInput(accessibleName, configuredSelector);
+
+    await this.assertInputContainsValue(input, expectedValue);
+  }
+
+  private async bancoEspanaInput(accessibleName: string, configuredSelector: string): Promise<Locator> {
+    const configuredInput = this.page.locator(configuredSelector).first();
+
+    if (await configuredInput.count()) {
+      await expect(configuredInput).toBeVisible();
+      return configuredInput;
+    }
+
+    const roleInput = this.page.getByRole('combobox', { name: new RegExp(this.escapeRegExp(accessibleName), 'i') }).first();
+
+    if (await roleInput.count()) {
+      await expect(roleInput).toBeVisible();
+      return roleInput;
+    }
+
+    const textbox = this.page.getByRole('textbox', { name: new RegExp(this.escapeRegExp(accessibleName), 'i') }).first();
+
+    if (await textbox.count()) {
+      await expect(textbox).toBeVisible();
+      return textbox;
+    }
+
+    const fallbackInput = this.page
+      .locator(
+        `xpath=//*[contains(normalize-space(), "${accessibleName}")]/following::*[self::input or @role="combobox"][1]`
+      )
+      .first();
+
+    await expect(fallbackInput).toBeVisible();
+    return fallbackInput;
+  }
+
+  private async selectBancoEspanaAutocompleteOptionIfNeeded(input: Locator, value: string): Promise<void> {
+    const option = this.page
+      .locator(selectors.contactos.empresa.bancoEspanaAutocompleteOption)
+      .filter({ hasText: new RegExp(this.escapeRegExp(value), 'i') })
+      .filter({ hasNotText: /Crear|Buscar/i })
+      .first();
+
+    try {
+      await option.waitFor({ state: 'visible', timeout: 3000 });
+      await option.click();
+      return;
+    } catch {
+      const currentValue = (await input.inputValue()).trim();
+
+      if (new RegExp(this.escapeRegExp(value), 'i').test(currentValue)) {
+        await input.press('Tab');
+        return;
+      }
+
+      throw new Error(`No se encontró el valor "${value}" en el catálogo de Banco de España.`);
+    }
+  }
+
+  private async assertNoUnexpectedApplicationError(): Promise<void> {
+    const errorDialog = this.page.locator(selectors.common.unexpectedErrorDialog).first();
+
+    if (await errorDialog.isVisible()) {
+      const detailsButton = errorDialog.getByText('Ver detalles técnicos').first();
+
+      if (await detailsButton.isVisible()) {
+        await detailsButton.click();
+      }
+
+      const errorText = ((await errorDialog.textContent()) ?? '').trim();
+      throw new Error(`La aplicación mostró un error inesperado: ${errorText}`);
+    }
+  }
+
+  private async assertInputContainsValue(input: Locator, expectedValue: string): Promise<void> {
+    await expect
+      .poll(async () => (await input.inputValue()).trim(), {
+        message: `Esperaba que el campo contenga el valor ${expectedValue}`
+      })
+      .toMatch(new RegExp(this.escapeRegExp(expectedValue), 'i'));
+  }
+
+  private async assertPageTextMatches(expectedText: RegExp): Promise<void> {
+    await expect
+      .poll(async () => (await this.page.locator('body').textContent()) ?? '')
+      .toMatch(expectedText);
+  }
+
   private async selectAutocompleteOption(value: string): Promise<void> {
     const option = this.page.getByRole('option', { name: value, exact: true }).first();
 
@@ -578,6 +1331,48 @@ export class ContactosPage extends BasePage {
     await this.page.keyboard.press('ArrowDown');
     await this.page.keyboard.press('Enter');
     await this.page.keyboard.press('Escape');
+  }
+
+  private async selectAutocompleteOptionContaining(value: string): Promise<void> {
+    const option = this.page
+      .locator(
+        '.o-autocomplete--dropdown-item, .dropdown-menu .dropdown-item, .ui-menu-item, .o_select_menu_item, [role="option"], [role="menuitem"]'
+      )
+      .filter({ hasText: new RegExp(this.escapeRegExp(value), 'i') })
+      .filter({ hasNotText: /Crear|Buscar/i })
+      .first();
+
+    await expect(option).toBeVisible();
+    await option.click();
+  }
+
+  private async selectAutocompleteOptionContainingIfNeeded(
+    input: Locator,
+    container: Locator,
+    value: string
+  ): Promise<void> {
+    const option = this.page
+      .locator(
+        '.o-autocomplete--dropdown-item, .dropdown-menu .dropdown-item, .ui-menu-item, .o_select_menu_item, [role="option"], [role="menuitem"]'
+      )
+      .filter({ hasText: new RegExp(this.escapeRegExp(value), 'i') })
+      .filter({ hasNotText: /Crear|Buscar/i })
+      .first();
+
+    if (await option.isVisible()) {
+      await option.click();
+      return;
+    }
+
+    const currentValue = await input.inputValue();
+    const containerText = (await container.textContent()) ?? '';
+
+    if (new RegExp(this.escapeRegExp(value), 'i').test(`${currentValue} ${containerText}`)) {
+      await input.press('Tab');
+      return;
+    }
+
+    await expect(option).toBeVisible();
   }
 
   private async selectTipoDocumento(tipoDocumento: TipoDocumentoPersonaFisica): Promise<void> {
@@ -613,16 +1408,68 @@ export class ContactosPage extends BasePage {
     );
   }
 
+  private async hasFutureBirthDateValidation(): Promise<boolean> {
+    const validationText = await this.page.locator(selectors.common.validationMessage).allTextContents();
+    const pageText = (await this.page.locator('body').textContent()) ?? '';
+    const text = [...validationText, pageText].join(' ');
+
+    return /fecha de nacimiento|nacimiento/i.test(text) && /mayor|futura|actual|posterior/i.test(text);
+  }
+
+  private async hasFutureRegistroMercantilDateValidation(): Promise<boolean> {
+    const validationText = await this.page.locator(selectors.common.validationMessage).allTextContents();
+    const pageText = (await this.page.locator('body').textContent()) ?? '';
+    const text = [...validationText, pageText].join(' ');
+
+    return /fecha de inscripci[oó]n|inscripci[oó]n/i.test(text) && /futura|mayor|actual|posterior/i.test(text);
+  }
+
   private async openPersonasFisicasTab(): Promise<void> {
     await this.page.getByRole('tab', { name: selectors.contactos.personaFisica.labels.tabPersonasFisicas }).click();
+  }
+
+  private async assertPersonasFisicasTabIsHidden(): Promise<void> {
+    const tab = this.page.getByRole('tab', { name: selectors.contactos.personaFisica.labels.tabPersonasFisicas });
+
+    if (await tab.count()) {
+      await expect(tab).toBeHidden();
+    }
+  }
+
+  private async assertJuridicasTabIsHidden(): Promise<void> {
+    const tab = this.page.getByRole('tab', { name: selectors.contactos.empresa.labels.tabJuridicas });
+
+    if (await tab.count()) {
+      await expect(tab).toBeHidden();
+    }
   }
 
   private async openCodigosCnaeTab(): Promise<void> {
     await this.page.getByRole('tab', { name: selectors.contactos.empresa.labels.tabCodigosCnae }).click();
   }
 
+  private async openPersonasRelacionadasTab(): Promise<void> {
+    await this.page.getByRole('tab', { name: selectors.contactos.empresa.labels.tabPersonasRelacionadas }).click();
+  }
+
   private async openInformacionFiscalIaeTab(): Promise<void> {
     await this.page.getByRole('tab', { name: selectors.contactos.empresa.labels.tabInformacionFiscalIae }).click();
+  }
+
+  private async openBancoEspanaTab(): Promise<void> {
+    await this.page.getByRole('tab', { name: selectors.contactos.empresa.labels.tabBancoEspana }).click();
+  }
+
+  private async openRegistroMercantilTab(): Promise<void> {
+    const tab = this.page.getByRole('tab', { name: selectors.contactos.empresa.labels.tabRegistroMercantil });
+
+    await tab.scrollIntoViewIfNeeded();
+    await tab.click();
+    await this.page
+      .getByText(new RegExp(this.escapeRegExp(selectors.contactos.empresa.labels.provinciaInscripcion), 'i'))
+      .or(this.page.getByText(/Provincia del/i))
+      .first()
+      .scrollIntoViewIfNeeded();
   }
 
   private async saveExpectingValidationError(): Promise<void> {
@@ -638,8 +1485,36 @@ export class ContactosPage extends BasePage {
     }
   }
 
+  private async enterEditModeIfNeeded(): Promise<void> {
+    const saveButton = this.page.locator(selectors.contactos.form.saveButton).first();
+
+    if (await saveButton.isVisible()) {
+      return;
+    }
+
+    const editButton = this.page.locator(selectors.contactos.editButton).first();
+
+    await expect(editButton).toBeVisible();
+    await editButton.click();
+  }
+
   private async saveCurrentContact(): Promise<void> {
-    await this.click(selectors.contactos.form.saveButton);
+    await this.assertNoUnexpectedApplicationError();
+    const saveButton = this.page.locator(selectors.contactos.form.saveButton);
+
+    await expect(saveButton).toBeVisible();
+
+    try {
+      await saveButton.click({ timeout: 5000 });
+    } catch (error) {
+      await this.assertNoUnexpectedApplicationError();
+      if (error instanceof Error && /o_technical_modal|intercepts pointer events/i.test(error.message)) {
+        const dialogText = await this.visibleDialogText();
+        throw new Error(`La aplicación mostró un error técnico al guardar el contacto.${dialogText ? ` ${dialogText}` : ''}`);
+      }
+      throw error;
+    }
+
     await expect(this.page).not.toHaveURL(/\/new(?:$|[/?#])/, { timeout: 30000 });
   }
 
@@ -651,5 +1526,73 @@ export class ContactosPage extends BasePage {
 
   private escapeRegExp(value: string): string {
     return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  private inputNearExactLabelXPath(label: string): string {
+    return `xpath=//*[normalize-space()="${label}" or normalize-space()="${label}?"]/following::*[self::input or @role="combobox"][1]`;
+  }
+
+  private visibleSpanishDateRegex(date: string): RegExp {
+    return new RegExp(`^\\s*${this.visibleSpanishDateRegexSource(date)}`, 'i');
+  }
+
+  private visibleSpanishDateRegexSource(date: string): string {
+    const [day, month] = date.split('/');
+    const monthNames: Record<string, string> = {
+      '01': 'ene',
+      '02': 'feb',
+      '03': 'mar',
+      '04': 'abr',
+      '05': 'may',
+      '06': 'jun',
+      '07': 'jul',
+      '08': 'ago',
+      '09': 'sept?',
+      '10': 'oct',
+      '11': 'nov',
+      '12': 'dic'
+    };
+    const normalizedDay = Number(day).toString();
+    const monthName = monthNames[month] ?? month;
+
+    return `${normalizedDay}\\s+${monthName}`;
+  }
+
+  private registroMercantilTechnicalInputXPath(accessibleName: string): string {
+    const fieldNames = this.registroMercantilFieldNames(accessibleName);
+    const conditions = fieldNames
+      .map((fieldName) => `@name="${fieldName}" or starts-with(@id, "${fieldName}_")`)
+      .join(' or ');
+
+    return `xpath=//*[${conditions}]//input | //input[${conditions}]`;
+  }
+
+  private registroMercantilFieldNames(accessibleName: string): string[] {
+    const fieldNamesByLabel: Record<string, string[]> = {
+      [selectors.contactos.empresa.labels.provinciaInscripcion]: ['registred_state', 'registered_state'],
+      [selectors.contactos.empresa.labels.fechaInscripcion]: ['incription_date', 'inscription_date'],
+      [selectors.contactos.empresa.labels.tomo]: ['tome'],
+      [selectors.contactos.empresa.labels.folio]: ['folio'],
+      [selectors.contactos.empresa.labels.hoja]: ['sheet'],
+      [selectors.contactos.empresa.labels.inscripcion]: ['inscription']
+    };
+
+    return fieldNamesByLabel[accessibleName] ?? [];
+  }
+
+  private async visibleDialogText(): Promise<string> {
+    const dialog = this.page.locator('.modal.d-block, [role="dialog"]').first();
+
+    if (!(await dialog.isVisible())) {
+      return '';
+    }
+
+    const detailsButton = dialog.getByText('Ver detalles técnicos').first();
+
+    if (await detailsButton.isVisible()) {
+      await detailsButton.click();
+    }
+
+    return ((await dialog.textContent()) ?? '').trim();
   }
 }

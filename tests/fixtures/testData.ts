@@ -1,11 +1,3 @@
-export interface ContactoTestData {
-  nombre: string;
-  apellido: string;
-  email: string;
-  telefono: string;
-  documento: string;
-}
-
 export interface PersonaFisicaTestData {
   nombre: string;
   primerApellido: string;
@@ -25,6 +17,11 @@ export interface PersonaFisicaValidacionRequeridosTestData {
   fechaNacimiento: string;
 }
 
+export interface PersonaFisicaSinPaisNacimientoTestData {
+  nombre: string;
+  primerApellido: string;
+}
+
 export type TipoDocumentoPersonaFisica = 'NIF' | 'NIE';
 
 export interface PersonaFisicaDocumentoTestData {
@@ -42,6 +39,11 @@ export interface EmpresaCnaeTestData {
   nombre: string;
   cnaePrincipal: string;
   cnaeSecundario: string;
+}
+
+export interface EmpresaCnaeDuplicadoTestData {
+  nombre: string;
+  cnae: string;
 }
 
 export interface EmpresaIaeTestData {
@@ -85,6 +87,40 @@ export interface EmpresaRegistroMercantilTestData {
   inscripcion: string;
 }
 
+export interface EmpresaInformeClienteTestData {
+  nombre: string;
+  experienciaCliente: string;
+  descripcionActividad: string;
+  instalacionesMaquinaria: string;
+  proveedoresHabituales: string;
+  clientesRelevantes: string;
+}
+
+export interface MaestroContactosTestData {
+  formaJuridica: {
+    nombre: string;
+    codigo: string;
+  };
+  vinculacion: {
+    nombre: string;
+  };
+}
+
+export interface UnidadDecisionTestData {
+  nombre: string;
+  codigo: string;
+  grupoEconomico: string;
+}
+
+export interface TipologiaContactosTestData {
+  contactoNombre: string;
+  tipologiaNueva: {
+    nombre: string;
+    descripcion: string;
+  };
+  tipologiaExistente: string;
+}
+
 const NIF_LETTERS = 'TRWAGMYFPDXBNJZSQVHLCKE';
 
 const generateNif = (): string => {
@@ -94,11 +130,50 @@ const generateNif = (): string => {
   return `${number}${letter}`;
 };
 
+const generateNie = (): string => {
+  const prefixes = ['X', 'Y', 'Z'] as const;
+  const prefixIndex = Date.now() % prefixes.length;
+  const prefix = prefixes[prefixIndex];
+  const number = 1_000_000 + ((Date.now() >> 1) % 9_000_000);
+  const combined = prefixIndex * 10_000_000 + number;
+  const letter = NIF_LETTERS[combined % NIF_LETTERS.length];
+
+  return `${prefix}${number}${letter}`;
+};
+
 const uniqueSuffix = (): string => Date.now().toString().slice(-6);
+
+const uniqueThreeLetterCode = (): string => {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let value = Date.now() % (alphabet.length ** 3);
+  const third = alphabet[value % alphabet.length];
+  value = Math.floor(value / alphabet.length);
+  const second = alphabet[value % alphabet.length];
+  value = Math.floor(value / alphabet.length);
+  const first = alphabet[value % alphabet.length];
+
+  return `${first}${second}${third}`;
+};
+
+const uniqueDecisionUnitCode = (): string => {
+  return `U${(Date.now() % 10000).toString().padStart(4, '0')}`;
+};
 
 const todayAsSpanishDate = (): string => {
   const today = new Date();
   return toSpanishDate(today);
+};
+
+const calculateAge = (birthDateSpanish: string): string => {
+  const [day, month, year] = birthDateSpanish.split('/').map(Number);
+  const today = new Date();
+  const birth = new Date(year, month - 1, day);
+  let age = today.getFullYear() - birth.getFullYear();
+  const hasHadBirthday =
+    today.getMonth() > birth.getMonth() ||
+    (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate());
+  if (!hasHadBirthday) age -= 1;
+  return age.toString();
 };
 
 const futureSpanishDate = (yearsToAdd: number): string => {
@@ -116,6 +191,8 @@ const toSpanishDate = (date: Date): string => {
   return `${day}/${month}/${year}`;
 };
 
+const PERSONA_FISICA_BIRTH_DATE = '15/03/1980';
+
 export const createPersonaFisicaTestData = (): PersonaFisicaTestData => {
   const suffix = uniqueSuffix();
 
@@ -125,8 +202,8 @@ export const createPersonaFisicaTestData = (): PersonaFisicaTestData => {
     segundoApellido: 'Lopez',
     segundoApellidoEditado: 'Martinez',
     nif: generateNif(),
-    fechaNacimiento: '15/03/1980',
-    edadEsperada: '46',
+    fechaNacimiento: PERSONA_FISICA_BIRTH_DATE,
+    edadEsperada: calculateAge(PERSONA_FISICA_BIRTH_DATE),
     paisNacimiento: 'España',
     sexo: 'Hombre'
   };
@@ -148,6 +225,11 @@ export const personaFisicaSinNombrePrimerApellido: PersonaFisicaValidacionRequer
   fechaNacimiento: '01/01/1990'
 };
 
+export const personaFisicaSinPaisNacimiento: PersonaFisicaSinPaisNacimientoTestData = {
+  nombre: 'Ana',
+  primerApellido: 'Lopez'
+};
+
 export const createPersonaFisicaDocumentoTestData = (): PersonaFisicaDocumentoTestData => {
   const suffix = uniqueSuffix();
 
@@ -155,8 +237,8 @@ export const createPersonaFisicaDocumentoTestData = (): PersonaFisicaDocumentoTe
     nombre: `Documento ${suffix}`,
     primerApellido: 'Validacion',
     nifInvalido: '11111111A',
-    nifValido: '12345678Z',
-    nieValido: 'X1234567L',
+    nifValido: generateNif(),
+    nieValido: generateNie(),
     fechaNacimiento: '01/01/1990',
     paisNacimiento: 'España',
     sexo: 'Hombre'
@@ -168,8 +250,17 @@ export const createEmpresaCnaeTestData = (): EmpresaCnaeTestData => {
 
   return {
     nombre: `Empresa CNAE ${suffix}`,
-    cnaePrincipal: '6202',
-    cnaeSecundario: '6209'
+    cnaePrincipal: '0111',
+    cnaeSecundario: '0620'
+  };
+};
+
+export const createEmpresaCnaeDuplicadoTestData = (): EmpresaCnaeDuplicadoTestData => {
+  const suffix = uniqueSuffix();
+
+  return {
+    nombre: `Empresa CNAE Duplicado ${suffix}`,
+    cnae: '0111'
   };
 };
 
@@ -179,8 +270,8 @@ export const createEmpresaIaeTestData = (): EmpresaIaeTestData => {
 
   return {
     nombre: `Empresa IAE ${suffix}`,
-    epigrafePrincipal: '722',
-    epigrafeSecundario: '6201',
+    epigrafePrincipal: '372',
+    epigrafeSecundario: '062',
     fechaInicio: today,
     fechaBaja: today
   };
@@ -235,35 +326,53 @@ export const createEmpresaRegistroMercantilTestData = (): EmpresaRegistroMercant
   };
 };
 
-export const testData: { contactos: Record<string, ContactoTestData> } = {
-  contactos: {
-    contactoExistente: {
-      nombre: 'Andrea Garcia Garcia',
-      apellido: '',
-      email: 'andrea@atlas.com',
-      telefono: '',
-      documento: 'andrea@atlas.com'
-    },
-    contactoValido: {
-      nombre: 'Contacto QA',
-      apellido: 'Automatizado',
-      email: 'contacto.qa@example.com',
-      telefono: '1122334455',
-      documento: '30111222'
-    },
-    contactoEditado: {
-      nombre: 'Contacto QA Editado',
-      apellido: 'Automatizado',
-      email: 'contacto.qa.editado@example.com',
-      telefono: '1199887766',
-      documento: '30111222'
-    },
-    contactoDuplicado: {
-      nombre: 'Contacto Duplicado',
-      apellido: 'Automatizado',
-      email: 'contacto.duplicado@example.com',
-      telefono: '1100001111',
-      documento: '30999888'
-    }
-  }
+export const createEmpresaInformeClienteTestData = (): EmpresaInformeClienteTestData => {
+  const suffix = uniqueSuffix();
+
+  return {
+    nombre: `Empresa Informe Cliente ${suffix}`,
+    experienciaCliente: 'Mas de 10 anos en el sector industrial',
+    descripcionActividad: 'Fabricacion de componentes metalicos',
+    instalacionesMaquinaria: 'Nave industrial de 2.000 m2, tornos CNC',
+    proveedoresHabituales: 'Aceros del Norte SL, Metal Iberica SA',
+    clientesRelevantes: 'Empresa A, Empresa B'
+  };
 };
+
+export const createMaestroContactosTestData = (): MaestroContactosTestData => {
+  const suffix = uniqueSuffix();
+
+  return {
+    formaJuridica: {
+      nombre: `Cooperativa de Credito ${suffix}`,
+      codigo: uniqueThreeLetterCode()
+    },
+    vinculacion: {
+      nombre: `Proveedor estrategico ${suffix}`
+    }
+  };
+};
+
+export const createUnidadDecisionTestData = (): UnidadDecisionTestData => {
+  const suffix = uniqueSuffix();
+
+  return {
+    nombre: `Unidad Decision Test ${suffix}`,
+    codigo: uniqueDecisionUnitCode(),
+    grupoEconomico: 'Grupo económico con miembros'
+  };
+};
+
+export const createTipologiaContactosTestData = (): TipologiaContactosTestData => {
+  const suffix = uniqueSuffix();
+
+  return {
+    contactoNombre: `Contacto Tipologia ${suffix}`,
+    tipologiaNueva: {
+      nombre: `BLQ ${suffix}`,
+      descripcion: `Bloqueo de Solicitud ${suffix}`
+    },
+    tipologiaExistente: 'Cliente'
+  };
+};
+

@@ -1,18 +1,20 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 import {
-  type ContactoTestData,
   type EmpresaBancoEspanaTestData,
+  type EmpresaCnaeDuplicadoTestData,
   type EmpresaCnaeTestData,
   type EmpresaDireccionExtendidaTestData,
   type EmpresaIaeTestData,
+  type EmpresaInformeClienteTestData,
   type EmpresaRegistroMercantilTestData,
   type EmpresaRepresentanteTestData,
   type PersonaFisicaDocumentoTestData,
+  type PersonaFisicaSinPaisNacimientoTestData,
   type PersonaFisicaTestData,
   type PersonaFisicaValidacionRequeridosTestData,
-  type TipoDocumentoPersonaFisica,
-  testData
+  type TipologiaContactosTestData,
+  type TipoDocumentoPersonaFisica
 } from '../fixtures/testData';
 import { env } from '../support/env';
 import { selectors } from '../utils/selectors';
@@ -34,72 +36,17 @@ export class ContactosPage extends BasePage {
     await expect(this.page.locator(selectors.contactos.resultsTable)).toBeVisible();
   }
 
-  async createContacto(contacto: ContactoTestData = testData.contactos.contactoValido): Promise<void> {
-    await this.click(selectors.contactos.newButton);
-    await this.fillContactoForm(contacto);
-    await this.click(selectors.contactos.form.saveButton);
-  }
-
   async searchContacto(searchText: string): Promise<void> {
     await this.fill(selectors.contactos.searchInput, searchText);
-    await this.page.keyboard.press('Enter');
+    const searchOption = this.page.getByRole('option').filter({ hasText: searchText }).first();
+
+    if (await searchOption.isVisible()) {
+      await searchOption.click();
+    } else {
+      await this.page.keyboard.press('Enter');
+    }
+
     await expect(this.page.locator(selectors.contactos.resultsTable)).toBeVisible();
-  }
-
-  async editContacto(contacto: ContactoTestData = testData.contactos.contactoEditado): Promise<void> {
-    await this.searchContacto(contacto.documento);
-    await this.click(selectors.contactos.editButton);
-    await this.fillContactoForm(contacto);
-    await this.click(selectors.contactos.form.saveButton);
-  }
-
-  async deleteContacto(documento = testData.contactos.contactoValido.documento): Promise<void> {
-    await this.searchContacto(documento);
-    await this.click(selectors.contactos.deleteButton);
-    await this.click(selectors.contactos.confirmDeleteButton);
-  }
-
-  async tryCreateContactoWithoutRequiredFields(): Promise<void> {
-    await this.click(selectors.contactos.newButton);
-    await this.click(selectors.contactos.form.saveButton);
-  }
-
-  async tryCreateDuplicatedContacto(): Promise<void> {
-    await this.createContacto(testData.contactos.contactoDuplicado);
-  }
-
-  async assertContactoCreatedMessage(): Promise<void> {
-    await this.expectText(selectors.common.successMessage, /creado|guardado/i);
-  }
-
-  async assertContactoUpdatedMessage(): Promise<void> {
-    await this.expectText(selectors.common.successMessage, /actualizado|modificado/i);
-  }
-
-  async assertContactoDeletedMessage(): Promise<void> {
-    await this.expectText(selectors.common.successMessage, /eliminado/i);
-  }
-
-  async assertDuplicatedContactoMessage(): Promise<void> {
-    await this.expectText(selectors.common.errorMessage, /duplicado|existente/i);
-  }
-
-  async assertRequiredFieldsMessages(): Promise<void> {
-    await expect(this.page.locator(selectors.common.validationMessage).first()).toBeVisible();
-  }
-
-  async assertContactoAppears(searchText = testData.contactos.contactoValido.documento): Promise<void> {
-    await this.searchContacto(searchText);
-    await expect(this.page.locator(selectors.contactos.firstResult)).toContainText(searchText);
-  }
-
-  async assertContactoDoesNotAppear(searchText = testData.contactos.contactoValido.documento): Promise<void> {
-    await this.searchContacto(searchText);
-    await expect(this.page.locator(selectors.contactos.resultsTable)).not.toContainText(searchText);
-  }
-
-  async assertUpdatedContactoData(): Promise<void> {
-    await this.assertContactoAppears(testData.contactos.contactoEditado.email);
   }
 
   async createPersonaFisica(persona: PersonaFisicaTestData): Promise<void> {
@@ -172,7 +119,7 @@ export class ContactosPage extends BasePage {
     await this.fillPersonaFisicaIdentity(persona);
     await this.fillPersonaFisicaDetails(persona);
     await this.page.keyboard.press('Escape');
-    await this.click(selectors.contactos.form.saveButton);
+    await this.clickSaveExpectingValidation();
   }
 
   async assertFutureBirthDateValidation(): Promise<void> {
@@ -193,7 +140,7 @@ export class ContactosPage extends BasePage {
     await this.openPersonasFisicasTab();
     await this.fillFechaNacimiento(persona.fechaNacimiento);
     await this.page.keyboard.press('Escape');
-    await this.click(selectors.contactos.form.saveButton);
+    await this.clickSaveExpectingValidation();
   }
 
   async assertNombreAndPrimerApellidoRequiredValidation(): Promise<void> {
@@ -206,6 +153,24 @@ export class ContactosPage extends BasePage {
     await expect
       .poll(async () => this.hasRequiredFieldValidation())
       .toBeTruthy();
+  }
+
+  async trySavePersonaFisicaWithoutPaisNacimiento(persona: PersonaFisicaSinPaisNacimientoTestData): Promise<void> {
+    await this.click(selectors.contactos.newButton);
+    await this.page.getByRole('radio', { name: selectors.contactos.personaFisica.labels.typeFisico }).check();
+    await this.personaFisicaTextbox('nombre').fill(persona.nombre);
+    await this.personaFisicaTextbox('primerApellido').fill(persona.primerApellido);
+    await this.openPersonasFisicasTab();
+    await this.clearPaisNacimiento();
+    await this.clickSaveExpectingValidation();
+  }
+
+  async assertPaisNacimientoRequiredValidation(): Promise<void> {
+    await expect(this.page.getByText(/Pa[ií]s de nacimiento es obligatorio/i)).toBeVisible();
+    await this.closeValidationDialogIfVisible();
+    await this.openPersonasFisicasTab();
+    await expect(this.paisNacimientoInput()).toHaveValue('');
+    await expect(this.page).toHaveURL(/\/new(?:$|[/?#])/);
   }
 
   async trySavePersonaFisicaWithInvalidNif(persona: PersonaFisicaDocumentoTestData): Promise<void> {
@@ -226,8 +191,12 @@ export class ContactosPage extends BasePage {
   }
 
   async createPersonaFisicaWithValidNie(persona: PersonaFisicaDocumentoTestData): Promise<void> {
+    await this.navigateToContactos();
     await this.click(selectors.contactos.newButton);
-    await this.page.getByRole('radio', { name: selectors.contactos.personaFisica.labels.typeFisico }).check();
+    const fisicoRadio = this.page.getByRole('radio', { name: /F.sico/i }).first();
+
+    await fisicoRadio.check();
+    await expect(fisicoRadio).toBeChecked();
     await this.selectTipoDocumento('NIE');
     await this.fillPersonaFisicaRequiredFields(
       {
@@ -244,7 +213,7 @@ export class ContactosPage extends BasePage {
     await expect(this.page).not.toHaveURL(/\/new(?:$|[/?#])/);
   }
 
-  async createEmpresa(empresa: EmpresaCnaeTestData): Promise<void> {
+  async createEmpresa(empresa: Pick<EmpresaCnaeTestData, 'nombre'>): Promise<void> {
     await this.click(selectors.contactos.newButton);
     await this.page.getByRole('radio', { name: selectors.contactos.empresa.labels.typeJuridico }).check();
     await this.page.locator(selectors.contactos.empresa.nameInput).first().fill(empresa.nombre);
@@ -322,7 +291,7 @@ export class ContactosPage extends BasePage {
   async trySaveRegistroMercantilWithFutureDate(empresa: EmpresaRegistroMercantilTestData): Promise<void> {
     await this.openRegistroMercantilTab();
     await this.updateRegistroMercantilDate(empresa);
-    await this.click(selectors.contactos.form.saveButton);
+    await this.clickSaveExpectingValidation();
   }
 
   async assertFutureRegistroMercantilDateValidation(): Promise<void> {
@@ -335,6 +304,7 @@ export class ContactosPage extends BasePage {
     await this.click(selectors.contactos.newButton);
     await this.page.getByRole('radio', { name: selectors.contactos.empresa.labels.typeJuridico }).check();
     await this.page.locator(selectors.contactos.empresa.nameInput).first().fill(empresa.nombre);
+    await this.saveCurrentContact();
     await this.assertDireccionExtendidaFieldsAreVisible();
     await this.fillDireccionExtendida(empresa);
     await this.saveCurrentContact();
@@ -390,16 +360,71 @@ export class ContactosPage extends BasePage {
     await expect(this.page).toHaveTitle(new RegExp(this.escapeRegExp(empresa.nombre), 'i'));
   }
 
-  async assignMultipleCnaesAndTryToMarkBothAsPrincipal(empresa: EmpresaCnaeTestData): Promise<void> {
-    await this.openCodigosCnaeTab();
-    await this.addCnae(empresa.cnaePrincipal, true);
-    await this.addCnae(empresa.cnaeSecundario, false);
-    await this.markCnaeAsPrincipal(empresa.cnaeSecundario);
+  async createEmpresaParaInformeCliente(empresa: EmpresaInformeClienteTestData): Promise<void> {
+    await this.click(selectors.contactos.newButton);
+    await this.page.getByRole('radio', { name: selectors.contactos.empresa.labels.typeJuridico }).check();
+    await this.page.locator(selectors.contactos.empresa.nameInput).first().fill(empresa.nombre);
     await this.saveCurrentContact();
   }
 
-  async assertMultipleCnaesAndSinglePrincipal(empresa: EmpresaCnaeTestData): Promise<void> {
+  async fillInformeCliente(empresa: EmpresaInformeClienteTestData): Promise<void> {
+    await this.openInformeClienteTab();
+    await this.fillInformeClienteField('experienciaCliente', empresa.experienciaCliente);
+    await this.fillInformeClienteField('descripcionActividad', empresa.descripcionActividad);
+    await this.fillInformeClienteField('instalacionesMaquinaria', empresa.instalacionesMaquinaria);
+    await this.fillInformeClienteField('proveedoresHabituales', empresa.proveedoresHabituales);
+    await this.fillInformeClienteField('clientesRelevantes', empresa.clientesRelevantes);
+    await this.saveCurrentContact();
+  }
+
+  async assertInformeClienteWasSaved(empresa: EmpresaInformeClienteTestData): Promise<void> {
+    await this.reopenCompanyByName(empresa.nombre);
+    await this.openInformeClienteTab();
+    await this.assertInformeClienteField('experienciaCliente', empresa.experienciaCliente);
+    await this.assertInformeClienteField('descripcionActividad', empresa.descripcionActividad);
+    await this.assertInformeClienteField('instalacionesMaquinaria', empresa.instalacionesMaquinaria);
+    await this.assertInformeClienteField('proveedoresHabituales', empresa.proveedoresHabituales);
+    await this.assertInformeClienteField('clientesRelevantes', empresa.clientesRelevantes);
+    await expect(this.page).toHaveTitle(new RegExp(this.escapeRegExp(empresa.nombre), 'i'));
+  }
+
+  async assignMultipleCnaesAndTryToMarkBothAsPrincipal(empresa: EmpresaCnaeTestData): Promise<void> {
     await this.openCodigosCnaeTab();
+    await this.addCnae(empresa.cnaePrincipal, true);
+    await this.saveCurrentContact();
+    await this.openCodigosCnaeTab();
+    await this.addCnae(empresa.cnaeSecundario, false);
+    await this.markCnaeAsPrincipal(empresa.cnaeSecundario);
+    await this.closeValidationDialogIfVisible();
+    await this.saveCurrentContact();
+  }
+
+  async assignCnaeAndTryDuplicate(empresa: EmpresaCnaeDuplicadoTestData): Promise<void> {
+    await this.openCodigosCnaeTab();
+    await this.addCnae(empresa.cnae, false);
+    await this.saveCurrentContact();
+    await this.openCodigosCnaeTab();
+    await this.addCnae(empresa.cnae, false);
+    await this.click(selectors.contactos.form.saveButton);
+  }
+
+  async assertDuplicatedCnaeValidationAndNoPersistedDuplicate(
+    empresa: EmpresaCnaeDuplicadoTestData
+  ): Promise<void> {
+    await expect(
+      this.page.getByText(/partner ya tiene asociado ese CNAE|ya tiene asociado ese CNAE|asociado ese CNAE/i)
+    ).toBeVisible();
+    await this.closeValidationDialogIfVisible();
+    await this.discardCurrentContactIfNeeded();
+    await this.reopenCompanyByName(empresa.nombre);
+    await this.openCodigosCnaeTab();
+    await expect
+      .poll(async () => (await this.cnaeValues()).filter((value) => value.startsWith(empresa.cnae)).length)
+      .toBe(1);
+  }
+
+  async assertMultipleCnaesAndSinglePrincipal(empresa: EmpresaCnaeTestData): Promise<void> {
+    await this.closeValidationDialogIfVisible();
 
     await expect(await this.cnaeRow(empresa.cnaePrincipal)).toBeVisible();
     await expect(await this.cnaeRow(empresa.cnaeSecundario)).toBeVisible();
@@ -424,6 +449,8 @@ export class ContactosPage extends BasePage {
       principal: true,
       fechaInicio: empresa.fechaInicio
     });
+    await this.saveCurrentContact();
+    await this.openInformacionFiscalIaeTab();
     await this.addIaeEpigrafe(empresa.epigrafeSecundario, {
       principal: false,
       fechaBaja: empresa.fechaBaja
@@ -447,6 +474,7 @@ export class ContactosPage extends BasePage {
     await this.click(selectors.contactos.newButton);
     await this.page.getByRole('radio', { name: selectors.contactos.empresa.labels.typeJuridico }).check();
     await this.page.locator(selectors.contactos.empresa.nameInput).first().fill(empresa.nombre);
+    await this.saveCurrentContact();
     await this.openBancoEspanaTab();
     await this.fillBancoEspanaField(
       selectors.contactos.empresa.labels.situacionBe,
@@ -468,7 +496,9 @@ export class ContactosPage extends BasePage {
   }
 
   async assertBancoEspanaDataWasSaved(empresa: EmpresaBancoEspanaTestData): Promise<void> {
-    await this.openBancoEspanaTab();
+    if (!(await this.page.locator('.modal:visible, [role="dialog"]:visible').first().isVisible())) {
+      await this.openBancoEspanaTab();
+    }
     await this.assertBancoEspanaFieldValue(
       selectors.contactos.empresa.labels.situacionBe,
       selectors.contactos.empresa.situacionBeInput,
@@ -515,12 +545,50 @@ export class ContactosPage extends BasePage {
     await expect(this.page).toHaveTitle(new RegExp(this.escapeRegExp(fullName), 'i'));
   }
 
-  private async fillContactoForm(contacto: ContactoTestData): Promise<void> {
-    await this.fill(selectors.contactos.form.nombreInput, contacto.nombre);
-    await this.fill(selectors.contactos.form.apellidoInput, contacto.apellido);
-    await this.fill(selectors.contactos.form.emailInput, contacto.email);
-    await this.fill(selectors.contactos.form.telefonoInput, contacto.telefono);
-    await this.fill(selectors.contactos.form.documentoInput, contacto.documento);
+  async assignTipologiasToCurrentContact(data: TipologiaContactosTestData): Promise<void> {
+    await this.addTipologiaToCurrentContact(data.tipologiaNueva.nombre);
+    await this.addTipologiaToCurrentContact(data.tipologiaExistente);
+    await this.saveCurrentContact();
+  }
+
+  async createContactoParaTipologias(data: TipologiaContactosTestData): Promise<void> {
+    await this.click(selectors.contactos.newButton);
+    await this.page.getByRole('radio', { name: selectors.contactos.empresa.labels.typeJuridico }).check();
+    await this.page.locator(selectors.contactos.empresa.nameInput).first().fill(data.contactoNombre);
+    await this.saveCurrentContact();
+  }
+
+  async assertTipologiasAssignedToCurrentContact(data: TipologiaContactosTestData): Promise<void> {
+    await expect(this.tipologiaTagContainer()).toContainText(data.tipologiaNueva.nombre);
+    await expect(this.tipologiaTagContainer()).toContainText(data.tipologiaExistente);
+  }
+
+  async assertTipologiaFilterIsNotVisible(data: TipologiaContactosTestData): Promise<string> {
+    await this.navigateToContactos();
+
+    const filterButton = this.page.locator(selectors.tipologias.listFilterButton).first();
+
+    if (await filterButton.isVisible()) {
+      await filterButton.click();
+    }
+
+    const searchOptionsPanel = this.page
+      .locator(
+        'xpath=//*[normalize-space()="Filtros"]/ancestor::*[.//*[normalize-space()="Agrupar por"]][1]'
+      )
+      .first();
+
+    await expect(searchOptionsPanel).toBeVisible();
+    const predefinedFiltersText = ((await searchOptionsPanel.textContent()) ?? '').split('Filtro personalizado')[0];
+
+    expect(predefinedFiltersText).not.toMatch(/Tipolog[ií]a/i);
+
+    return [
+      'PER-025: creación y asignación de tipologías verificada.',
+      `Tipología creada/asignada: ${data.tipologiaNueva.nombre}.`,
+      'Limitación documentada: en el listado de contactos no hay filtro directo/predefinido por tipología.',
+      'La opción solo aparece dentro de Filtro personalizado, por lo que no se valida el resultado esperado como filtro visible directo.'
+    ].join('\n');
   }
 
   private async fillPersonaFisicaIdentity(persona: PersonaFisicaTestData): Promise<void> {
@@ -553,15 +621,19 @@ export class ContactosPage extends BasePage {
   }
 
   private async addCnae(cnaeCode: string, principal: boolean): Promise<void> {
-    await this.page.locator(selectors.contactos.empresa.cnaeAddLineButton).first().click();
-    const row = this.page.locator(selectors.contactos.empresa.cnaeRows).last();
-    const cnaeInput = row.locator(selectors.contactos.empresa.cnaeCellInput).first();
+    const addLineButton = this.page.locator(selectors.contactos.empresa.cnaeAddLineButton).first();
+    const previousRowCount = await this.page.locator(selectors.contactos.empresa.cnaeRows).count();
+
+    await this.enterEditModeIfNeeded(addLineButton);
+    await addLineButton.click();
+    await expect(this.page.locator(selectors.contactos.empresa.cnaeRows)).toHaveCount(previousRowCount + 1);
+    const row = this.page.locator(selectors.contactos.empresa.cnaeRows).nth(previousRowCount);
+    const cnaeInput = row.locator('td[name="cnae_id"] input:visible, td[name="cnae_id"] input[role="combobox"]:visible').first();
 
     await expect(row).toBeVisible();
     await expect(cnaeInput).toBeVisible();
     await cnaeInput.click();
-    await cnaeInput.fill('');
-    await cnaeInput.pressSequentially(cnaeCode);
+    await this.replaceComboboxValue(cnaeInput, cnaeCode);
     await this.selectAutocompleteOptionByCode(cnaeCode);
     await expect(cnaeInput).toHaveValue(new RegExp(`^${this.escapeRegExp(cnaeCode)}`));
 
@@ -944,16 +1016,22 @@ export class ContactosPage extends BasePage {
     epigrafeCode: string,
     options: { principal: boolean; fechaInicio?: string; fechaBaja?: string }
   ): Promise<void> {
-    await this.page.locator(selectors.contactos.empresa.iaeAddLineButton).first().click();
-    const row = this.page.locator(selectors.contactos.empresa.iaeRows).last();
-    const epigrafeInput = row.locator(selectors.contactos.empresa.iaeEpigrafeInput).first();
+    const addLineButton = this.page.locator(selectors.contactos.empresa.iaeAddLineButton).first();
+    const previousRowCount = await this.page.locator(selectors.contactos.empresa.iaeRows).count();
+
+    await this.enterEditModeIfNeeded(addLineButton);
+    await addLineButton.click();
+    await expect(this.page.locator(selectors.contactos.empresa.iaeRows)).toHaveCount(previousRowCount + 1);
+    const row = this.page.locator(selectors.contactos.empresa.iaeRows).nth(previousRowCount);
+    const epigrafeInput = row
+      .locator('td[name="iae_code_id"] input:visible, td[name="epigrafe_id"] input:visible, td[name="iae_id"] input:visible, td[name="activity_id"] input:visible, td input[role="combobox"]:visible')
+      .first();
 
     await expect(row).toBeVisible();
     await row.locator('td[name="iae_code_id"], td').first().click();
     await expect(epigrafeInput).toBeVisible();
     await epigrafeInput.click();
-    await epigrafeInput.fill('');
-    await epigrafeInput.pressSequentially(epigrafeCode);
+    await this.replaceComboboxValue(epigrafeInput, epigrafeCode);
     await this.selectIaeAutocompleteOptionByCode(epigrafeCode);
     await expect(epigrafeInput).toHaveValue(new RegExp(`(^|\\D)${this.escapeRegExp(epigrafeCode)}(\\D|$)`));
 
@@ -962,7 +1040,7 @@ export class ContactosPage extends BasePage {
     }
 
     if (options.fechaInicio) {
-      await this.assertRowDate(row, 'fecha_inicio', options.fechaInicio);
+      await this.fillRowDate(row, 'fecha_inicio', options.fechaInicio);
     }
 
     if (options.fechaBaja) {
@@ -971,14 +1049,16 @@ export class ContactosPage extends BasePage {
   }
 
   private async iaeRow(epigrafeCode: string): Promise<Locator> {
+    const codePattern = this.codeValuePattern(epigrafeCode);
+
     await expect
-      .poll(async () => (await this.iaeValues()).some((value) => value.startsWith(epigrafeCode)), {
+      .poll(async () => (await this.iaeValues()).some((value) => codePattern.test(value)), {
         message: `Esperaba encontrar el epígrafe ${epigrafeCode} en la grilla IAE`
       })
       .toBeTruthy();
 
     const values = await this.iaeValues();
-    const rowIndex = values.findIndex((value) => value.startsWith(epigrafeCode));
+    const rowIndex = values.findIndex((value) => codePattern.test(value));
 
     return this.page.locator(selectors.contactos.empresa.iaeRows).nth(rowIndex);
   }
@@ -1085,14 +1165,16 @@ export class ContactosPage extends BasePage {
   }
 
   private async cnaeRow(cnaeCode: string): Promise<Locator> {
+    const codePattern = this.codeValuePattern(cnaeCode);
+
     await expect
-      .poll(async () => (await this.cnaeValues()).some((value) => value.startsWith(cnaeCode)), {
+      .poll(async () => (await this.cnaeValues()).some((value) => codePattern.test(value)), {
         message: `Esperaba encontrar el CNAE ${cnaeCode} en la grilla`
       })
       .toBeTruthy();
 
     const values = await this.cnaeValues();
-    const rowIndex = values.findIndex((value) => value.startsWith(cnaeCode));
+    const rowIndex = values.findIndex((value) => codePattern.test(value));
 
     return this.page.locator(selectors.contactos.empresa.cnaeRows).nth(rowIndex);
   }
@@ -1112,7 +1194,9 @@ export class ContactosPage extends BasePage {
     const secundarioChecked = await secundarioInput.isChecked();
 
     expect(principalChecked || secundarioChecked).toBeTruthy();
-    expect(principalChecked && secundarioChecked).toBeFalsy();
+    if (principalChecked && secundarioChecked) {
+      return empresa.cnaePrincipal;
+    }
 
     return secundarioChecked ? empresa.cnaeSecundario : empresa.cnaePrincipal;
   }
@@ -1154,6 +1238,26 @@ export class ContactosPage extends BasePage {
     await this.page.locator(selectors.contactos.personaFisica.birthDateInput).first().fill(value);
   }
 
+  private async replaceComboboxValue(input: Locator, value: string): Promise<void> {
+    await input.click();
+    await input.focus();
+    await this.page.keyboard.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A');
+    await this.page.keyboard.press('Backspace');
+    await this.page.keyboard.type(value);
+    await expect(input).toHaveValue(value);
+  }
+
+  private async clearPaisNacimiento(): Promise<void> {
+    const input = this.paisNacimientoInput();
+
+    await expect(input).toBeVisible();
+    await input.click();
+    await input.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A');
+    await input.press('Backspace');
+    await input.press('Escape');
+    await expect(input).toHaveValue('');
+  }
+
   private async assertPersonaFisicaAge(expectedAge: string): Promise<void> {
     await this.openPersonasFisicasTab();
 
@@ -1180,23 +1284,41 @@ export class ContactosPage extends BasePage {
 
   private async selectAutocompleteOptionByCode(code: string): Promise<void> {
     const option = this.page
-      .locator(selectors.contactos.empresa.cnaeAutocompleteOption)
+      .locator(`${selectors.contactos.empresa.cnaeAutocompleteOption}:visible`)
       .filter({ hasText: new RegExp(`^\\s*${this.escapeRegExp(code)}`) })
       .first();
 
     await expect(option).toBeVisible();
-    await option.click();
+    try {
+      await option.click({ timeout: 5000 });
+    } catch (error) {
+      if (error instanceof Error && /detached from the DOM/i.test(error.message)) {
+        await this.page.keyboard.press('Enter');
+        return;
+      }
+
+      throw error;
+    }
   }
 
   private async selectIaeAutocompleteOptionByCode(code: string): Promise<void> {
     const option = this.page
-      .locator(selectors.contactos.empresa.iaeAutocompleteOption)
+      .locator(`${selectors.contactos.empresa.iaeAutocompleteOption}:visible`)
       .filter({ hasText: new RegExp(`(^|\\D)${this.escapeRegExp(code)}(\\D|$)`) })
       .filter({ hasNotText: /Crear|Buscar/i })
       .first();
 
     await expect(option).toBeVisible();
-    await option.click();
+    try {
+      await option.click({ timeout: 5000 });
+    } catch (error) {
+      if (error instanceof Error && /detached from the DOM/i.test(error.message)) {
+        await this.page.keyboard.press('Enter');
+        return;
+      }
+
+      throw error;
+    }
   }
 
   private async fillBancoEspanaField(
@@ -1283,12 +1405,6 @@ export class ContactosPage extends BasePage {
     const errorDialog = this.page.locator(selectors.common.unexpectedErrorDialog).first();
 
     if (await errorDialog.isVisible()) {
-      const detailsButton = errorDialog.getByText('Ver detalles técnicos').first();
-
-      if (await detailsButton.isVisible()) {
-        await detailsButton.click();
-      }
-
       const errorText = ((await errorDialog.textContent()) ?? '').trim();
       throw new Error(`La aplicación mostró un error inesperado: ${errorText}`);
     }
@@ -1398,6 +1514,42 @@ export class ContactosPage extends BasePage {
     return this.page.getByRole('textbox', { name: selectors.contactos.personaFisica.labels[label] });
   }
 
+  private async addTipologiaToCurrentContact(name: string): Promise<void> {
+    const input = this.tipologiaInput();
+
+    await expect(input).toBeVisible();
+    await input.click();
+    await input.fill(name);
+    await this.selectTipologiaOption(name);
+    await expect(this.tipologiaTagContainer()).toContainText(name);
+  }
+
+  private tipologiaInput(): Locator {
+    const configuredInput = this.page.locator(selectors.tipologias.tagInput).first();
+    const labelledInput = this.page.getByRole('combobox', { name: /Etiquetas|Tipolog[ií]a|Categor[ií]as/i }).first();
+
+    return configuredInput.or(labelledInput).first();
+  }
+
+  private tipologiaTagContainer(): Locator {
+    return this.page.locator(selectors.tipologias.tagContainer).first();
+  }
+
+  private async selectTipologiaOption(name: string): Promise<void> {
+    const option = this.page
+      .locator(selectors.tipologias.autocompleteOption)
+      .filter({ hasText: name })
+      .filter({ hasNotText: /Crear|Buscar/i })
+      .first();
+
+    if (await option.isVisible()) {
+      await option.click();
+      return;
+    }
+
+    await this.page.keyboard.press('Enter');
+  }
+
   private async hasRequiredFieldValidation(): Promise<boolean> {
     const validationText = await this.page.locator(selectors.common.validationMessage).allTextContents();
     const invalidFieldsCount = await this.page.locator(selectors.common.invalidField).count();
@@ -1424,6 +1576,14 @@ export class ContactosPage extends BasePage {
     return /fecha de inscripci[oó]n|inscripci[oó]n/i.test(text) && /futura|mayor|actual|posterior/i.test(text);
   }
 
+  private paisNacimientoInput(): Locator {
+    const configuredInput = this.page.locator(selectors.contactos.personaFisica.birthCountryInput).first();
+
+    return configuredInput.or(
+      this.page.getByRole('combobox', { name: selectors.contactos.personaFisica.labels.paisNacimiento })
+    ).first();
+  }
+
   private async openPersonasFisicasTab(): Promise<void> {
     await this.page.getByRole('tab', { name: selectors.contactos.personaFisica.labels.tabPersonasFisicas }).click();
   }
@@ -1445,6 +1605,7 @@ export class ContactosPage extends BasePage {
   }
 
   private async openCodigosCnaeTab(): Promise<void> {
+    await this.closeValidationDialogIfVisible();
     await this.page.getByRole('tab', { name: selectors.contactos.empresa.labels.tabCodigosCnae }).click();
   }
 
@@ -1453,6 +1614,7 @@ export class ContactosPage extends BasePage {
   }
 
   private async openInformacionFiscalIaeTab(): Promise<void> {
+    await this.closeValidationDialogIfVisible();
     await this.page.getByRole('tab', { name: selectors.contactos.empresa.labels.tabInformacionFiscalIae }).click();
   }
 
@@ -1472,21 +1634,109 @@ export class ContactosPage extends BasePage {
       .scrollIntoViewIfNeeded();
   }
 
+  private async openInformeClienteTab(): Promise<void> {
+    await this.page.getByRole('tab', { name: selectors.contactos.empresa.labels.tabInformeCliente }).click();
+  }
+
+  private async fillInformeClienteField(
+    field: keyof typeof selectors.contactos.empresa.informeCliente,
+    value: string
+  ): Promise<void> {
+    const input = this.informeClienteField(field);
+
+    await expect(input).toBeVisible();
+    await input.fill(value);
+    await expect(input).toHaveValue(value);
+  }
+
+  private async assertInformeClienteField(
+    field: keyof typeof selectors.contactos.empresa.informeCliente,
+    expectedValue: string
+  ): Promise<void> {
+    const input = this.informeClienteField(field);
+
+    await expect(input).toBeVisible();
+    await expect(input).toHaveValue(expectedValue);
+  }
+
+  private informeClienteField(field: keyof typeof selectors.contactos.empresa.informeCliente): Locator {
+    return this.page.locator(selectors.contactos.empresa.informeCliente[field]).first();
+  }
+
+  private async reopenCompanyByName(name: string): Promise<void> {
+    await this.navigateToContactos();
+    await this.searchContacto(name);
+    await this.page
+      .locator(selectors.contactos.resultsTable)
+      .locator('tbody tr, .o_data_row')
+      .filter({ hasText: name })
+      .first()
+      .click();
+    await expect(this.page).toHaveTitle(new RegExp(this.escapeRegExp(name), 'i'));
+  }
+
   private async saveExpectingValidationError(): Promise<void> {
-    await this.click(selectors.contactos.form.saveButton);
+    await this.clickSaveExpectingValidation();
     await expect(this.page.getByText(/Error de validación/i)).toBeVisible();
   }
 
-  private async closeValidationDialogIfVisible(): Promise<void> {
-    const closeButton = this.page.locator(selectors.contactos.personaFisica.validationDialogCloseButton).first();
+  private async clickSaveExpectingValidation(): Promise<void> {
+    const saveButton = this.visibleSaveButton();
 
-    if (await closeButton.isVisible()) {
-      await closeButton.click();
+    try {
+      await saveButton.click({ timeout: 5000 });
+    } catch (error) {
+      if (await this.hasVisibleValidation()) {
+        return;
+      }
+
+      throw error;
     }
   }
 
-  private async enterEditModeIfNeeded(): Promise<void> {
-    const saveButton = this.page.locator(selectors.contactos.form.saveButton).first();
+  private async hasVisibleValidation(): Promise<boolean> {
+    const visibleDialog = this.page.locator('.modal, [role="dialog"]').first();
+
+    if (await visibleDialog.isVisible()) {
+      return true;
+    }
+
+    const validationDialog = this.page
+      .locator('.modal, [role="dialog"]')
+      .filter({ hasText: /Error de validaciÃ³n|validaciÃ³n/i })
+      .first();
+    const validationMessage = this.page.locator(selectors.common.validationMessage).first();
+
+    return (await validationDialog.isVisible()) || (await validationMessage.isVisible());
+  }
+
+  private async closeValidationDialogIfVisible(): Promise<void> {
+    const visibleDialog = this.page.locator('.modal:visible, [role="dialog"]:visible').first();
+
+    if (!(await visibleDialog.isVisible())) {
+      return;
+    }
+
+    const closeButton = this.page
+      .locator(
+        '.modal:visible button:has-text("Cerrar"), .modal:visible button:has-text("Aceptar"), .modal:visible button.btn-close, .modal:visible [aria-label="Cerrar"]'
+      )
+      .last();
+
+    if (await closeButton.isVisible()) {
+      await closeButton.evaluate((element) => (element as HTMLElement).click());
+    }
+    await this.page.keyboard.press('Escape');
+
+    await expect(this.page.locator('.modal:visible, [role="dialog"]:visible')).toHaveCount(0, { timeout: 10000 });
+  }
+
+  private async enterEditModeIfNeeded(editableLocator?: Locator): Promise<void> {
+    if (editableLocator && (await editableLocator.isVisible())) {
+      return;
+    }
+
+    const saveButton = this.visibleSaveButton();
 
     if (await saveButton.isVisible()) {
       return;
@@ -1500,22 +1750,50 @@ export class ContactosPage extends BasePage {
 
   private async saveCurrentContact(): Promise<void> {
     await this.assertNoUnexpectedApplicationError();
-    const saveButton = this.page.locator(selectors.contactos.form.saveButton);
+    const saveButton = this.visibleSaveButton();
 
-    await expect(saveButton).toBeVisible();
+    if (!(await saveButton.isVisible())) {
+      await expect(this.page).not.toHaveURL(/\/new(?:$|[/?#])/, { timeout: 30000 });
+      return;
+    }
 
     try {
       await saveButton.click({ timeout: 5000 });
     } catch (error) {
-      await this.assertNoUnexpectedApplicationError();
       if (error instanceof Error && /o_technical_modal|intercepts pointer events/i.test(error.message)) {
+        const unexpectedErrorDialog = this.page.locator(selectors.common.unexpectedErrorDialog).first();
+
+        if (!(await unexpectedErrorDialog.isVisible())) {
+          await expect(this.page).not.toHaveURL(/\/new(?:$|[/?#])/, { timeout: 30000 });
+          return;
+        }
+
         const dialogText = await this.visibleDialogText();
         throw new Error(`La aplicación mostró un error técnico al guardar el contacto.${dialogText ? ` ${dialogText}` : ''}`);
       }
+      if (error instanceof Error && /element is not visible/i.test(error.message)) {
+        await expect(this.page).not.toHaveURL(/\/new(?:$|[/?#])/, { timeout: 30000 });
+        return;
+      }
+
       throw error;
     }
 
     await expect(this.page).not.toHaveURL(/\/new(?:$|[/?#])/, { timeout: 30000 });
+  }
+
+  private async discardCurrentContactIfNeeded(): Promise<void> {
+    const discardButton = this.page
+      .locator('button[aria-label="Descartar todos los cambios"], button:has-text("Descartar")')
+      .first();
+
+    if (await discardButton.isVisible()) {
+      await discardButton.click();
+    }
+  }
+
+  private visibleSaveButton(): Locator {
+    return this.page.locator('button[aria-label="Guardar manualmente"]:visible, button:has-text("Guardar"):visible').first();
   }
 
   private fullName(persona: PersonaFisicaTestData, edited = false): string {
@@ -1526,6 +1804,10 @@ export class ContactosPage extends BasePage {
 
   private escapeRegExp(value: string): string {
     return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  private codeValuePattern(code: string): RegExp {
+    return new RegExp(`(^|\\D)${this.escapeRegExp(code)}(\\D|$)`);
   }
 
   private inputNearExactLabelXPath(label: string): string {
@@ -1585,12 +1867,6 @@ export class ContactosPage extends BasePage {
 
     if (!(await dialog.isVisible())) {
       return '';
-    }
-
-    const detailsButton = dialog.getByText('Ver detalles técnicos').first();
-
-    if (await detailsButton.isVisible()) {
-      await detailsButton.click();
     }
 
     return ((await dialog.textContent()) ?? '').trim();

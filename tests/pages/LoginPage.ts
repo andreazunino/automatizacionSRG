@@ -35,6 +35,6 @@ export class LoginPage extends BasePage {
   }
 
   async assertHomeIsVisible(): Promise<void> {
-    await expect(this.page.locator(selectors.login.homeTitle)).toBeVisible({ timeout: 30000 });
+    await expect(this.page.locator(selectors.login.homeTitle).first()).toBeVisible({ timeout: 30000 });
   }
 }

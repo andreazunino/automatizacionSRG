@@ -1,16 +1,21 @@
-import { Then, When } from '@cucumber/cucumber';
+﻿import { Then, When } from '@cucumber/cucumber';
 import {
   createEmpresaBancoEspanaTestData,
+  createEmpresaCnaeDuplicadoTestData,
   createEmpresaCnaeTestData,
   createEmpresaDireccionExtendidaTestData,
   createEmpresaIaeTestData,
+  createEmpresaInformeClienteTestData,
+  createMaestroContactosTestData,
   createEmpresaRegistroMercantilTestData,
   createEmpresaRepresentanteTestData,
   createPersonaFisicaConFechaNacimientoFuturaTestData,
   createPersonaFisicaDocumentoTestData,
   createPersonaFisicaTestData,
+  createTipologiaContactosTestData,
+  createUnidadDecisionTestData,
   personaFisicaSinNombrePrimerApellido,
-  testData
+  personaFisicaSinPaisNacimiento
 } from '../fixtures/testData';
 import type { CustomWorld } from '../support/world';
 
@@ -20,66 +25,6 @@ When('accedo al módulo Contactos', async function (this: CustomWorld) {
 
 Then('debería visualizar la bandeja de Contactos', async function (this: CustomWorld) {
   await this.contactosPage.assertContactosPageIsVisible();
-});
-
-When('creo un contacto con datos válidos', async function (this: CustomWorld) {
-  await this.contactosPage.createContacto(testData.contactos.contactoValido);
-});
-
-Then('debería visualizar el mensaje de contacto creado', async function (this: CustomWorld) {
-  await this.contactosPage.assertContactoCreatedMessage();
-});
-
-Then('el contacto debería aparecer en la búsqueda', async function (this: CustomWorld) {
-  await this.contactosPage.assertContactoAppears(testData.contactos.contactoValido.documento);
-});
-
-When('busco un contacto existente', async function (this: CustomWorld) {
-  await this.contactosPage.searchContacto(testData.contactos.contactoExistente.documento);
-});
-
-Then('debería visualizar el contacto en los resultados', async function (this: CustomWorld) {
-  await this.contactosPage.assertContactoAppears(testData.contactos.contactoExistente.documento);
-});
-
-When('edito un contacto existente', async function (this: CustomWorld) {
-  await this.contactosPage.editContacto(testData.contactos.contactoEditado);
-});
-
-Then('debería visualizar el mensaje de contacto actualizado', async function (this: CustomWorld) {
-  await this.contactosPage.assertContactoUpdatedMessage();
-});
-
-Then('debería visualizar los datos actualizados del contacto', async function (this: CustomWorld) {
-  await this.contactosPage.assertUpdatedContactoData();
-});
-
-When('elimino un contacto existente', async function (this: CustomWorld) {
-  await this.contactosPage.deleteContacto(testData.contactos.contactoValido.documento);
-});
-
-Then('debería visualizar el mensaje de contacto eliminado', async function (this: CustomWorld) {
-  await this.contactosPage.assertContactoDeletedMessage();
-});
-
-Then('el contacto no debería aparecer en la búsqueda', async function (this: CustomWorld) {
-  await this.contactosPage.assertContactoDoesNotAppear(testData.contactos.contactoValido.documento);
-});
-
-When('intento crear un contacto sin completar campos obligatorios', async function (this: CustomWorld) {
-  await this.contactosPage.tryCreateContactoWithoutRequiredFields();
-});
-
-Then('debería visualizar los mensajes de campos obligatorios', async function (this: CustomWorld) {
-  await this.contactosPage.assertRequiredFieldsMessages();
-});
-
-When('intento crear un contacto duplicado', async function (this: CustomWorld) {
-  await this.contactosPage.tryCreateDuplicatedContacto();
-});
-
-Then('debería visualizar el mensaje de contacto duplicado', async function (this: CustomWorld) {
-  await this.contactosPage.assertDuplicatedContactoMessage();
 });
 
 When('creo una persona física con todos los campos de identidad', async function (this: CustomWorld) {
@@ -212,9 +157,67 @@ Then('debería visualizar la persona física guardada con NIE válido', async fu
   await this.contactosPage.assertPersonaFisicaDocumentoWasSaved(this.currentPersonaFisicaDocumento.nieValido);
 });
 
+When('intento guardar una persona física sin país de nacimiento', async function (this: CustomWorld) {
+  await this.contactosPage.trySavePersonaFisicaWithoutPaisNacimiento(personaFisicaSinPaisNacimiento);
+});
+
+Then('debería visualizar la validación de país de nacimiento obligatorio', async function (
+  this: CustomWorld
+) {
+  await this.contactosPage.assertPaisNacimientoRequiredValidation();
+});
+
+When('creo una empresa para completar Informe Cliente', async function (this: CustomWorld) {
+  this.currentEmpresaInformeCliente = createEmpresaInformeClienteTestData();
+  await this.contactosPage.createEmpresaParaInformeCliente(this.currentEmpresaInformeCliente);
+});
+
+When('completo y guardo los campos de Informe Cliente', async function (this: CustomWorld) {
+  if (!this.currentEmpresaInformeCliente) {
+    throw new Error('No existe una empresa de Informe Cliente en el escenario actual.');
+  }
+
+  await this.contactosPage.fillInformeCliente(this.currentEmpresaInformeCliente);
+});
+
+Then('debería visualizar los campos de Informe Cliente guardados al reabrir la empresa', async function (
+  this: CustomWorld
+) {
+  if (!this.currentEmpresaInformeCliente) {
+    throw new Error('No existe una empresa de Informe Cliente en el escenario actual.');
+  }
+
+  await this.contactosPage.assertInformeClienteWasSaved(this.currentEmpresaInformeCliente);
+});
+
 When('creo una empresa para gestionar sus CNAEs', async function (this: CustomWorld) {
   this.currentEmpresaCnae = createEmpresaCnaeTestData();
   await this.contactosPage.createEmpresa(this.currentEmpresaCnae);
+});
+
+When('creo una empresa para validar CNAE duplicado', async function (this: CustomWorld) {
+  this.currentEmpresaCnaeDuplicado = createEmpresaCnaeDuplicadoTestData();
+  await this.contactosPage.createEmpresa(this.currentEmpresaCnaeDuplicado);
+});
+
+When('intento asignar el mismo código CNAE dos veces a la empresa', async function (this: CustomWorld) {
+  if (!this.currentEmpresaCnaeDuplicado) {
+    throw new Error('No existe una empresa de CNAE duplicado en el escenario actual.');
+  }
+
+  await this.contactosPage.assignCnaeAndTryDuplicate(this.currentEmpresaCnaeDuplicado);
+});
+
+Then('debería visualizar la validación de CNAE duplicado sin guardar el duplicado', async function (
+  this: CustomWorld
+) {
+  if (!this.currentEmpresaCnaeDuplicado) {
+    throw new Error('No existe una empresa de CNAE duplicado en el escenario actual.');
+  }
+
+  await this.contactosPage.assertDuplicatedCnaeValidationAndNoPersistedDuplicate(
+    this.currentEmpresaCnaeDuplicado
+  );
 });
 
 When('asigno múltiples CNAEs e intento marcar ambos como principal', async function (this: CustomWorld) {
@@ -344,3 +347,113 @@ Then('debería visualizar los datos de Banco de España guardados correctamente'
 
   await this.contactosPage.assertBancoEspanaDataWasSaved(this.currentEmpresaBancoEspana);
 });
+
+When('creo una forma jurídica desde configuración', async function (this: CustomWorld) {
+  this.currentMaestroContactos = createMaestroContactosTestData();
+  await this.configuracionContactosPage.createFormaJuridica(this.currentMaestroContactos.formaJuridica);
+});
+
+When('intento crear otra forma jurídica con el mismo código exacto', async function (this: CustomWorld) {
+  if (!this.currentMaestroContactos) {
+    throw new Error('No existen datos de maestros de contactos en el escenario actual.');
+  }
+
+  await this.configuracionContactosPage.tryCreateDuplicatedFormaJuridica(
+    this.currentMaestroContactos.formaJuridica
+  );
+});
+
+Then('debería visualizar el rechazo por código duplicado exacto', async function (this: CustomWorld) {
+  await this.configuracionContactosPage.assertDuplicatedFormaJuridicaWasRejected();
+});
+
+When('creo una vinculación desde configuración', async function (this: CustomWorld) {
+  if (!this.currentMaestroContactos) {
+    throw new Error('No existen datos de maestros de contactos en el escenario actual.');
+  }
+
+  await this.configuracionContactosPage.createVinculacion(this.currentMaestroContactos.vinculacion);
+});
+
+Then('debería visualizar la vinculación disponible en configuración', async function (this: CustomWorld) {
+  if (!this.currentMaestroContactos) {
+    throw new Error('No existen datos de maestros de contactos en el escenario actual.');
+  }
+
+  await this.configuracionContactosPage.assertVinculacionAvailable(this.currentMaestroContactos.vinculacion);
+});
+
+When('creo una unidad de decisión desde configuración', async function (this: CustomWorld) {
+  this.currentUnidadDecision = createUnidadDecisionTestData();
+  await this.configuracionContactosPage.createUnidadDecision(this.currentUnidadDecision);
+});
+
+When(
+  'vinculo la unidad de decisión con un miembro de un grupo económico existente',
+  async function (this: CustomWorld) {
+    if (!this.currentUnidadDecision) {
+      throw new Error('No existen datos de unidad de decision en el escenario actual.');
+    }
+
+    await this.configuracionContactosPage.assignUnidadDecisionToExistingEconomicGroupMember(
+      this.currentUnidadDecision
+    );
+  }
+);
+
+Then(
+  'debería visualizar la unidad de decisión asignada al miembro del grupo económico',
+  async function (this: CustomWorld) {
+    if (!this.currentUnidadDecision) {
+      throw new Error('No existen datos de unidad de decision en el escenario actual.');
+    }
+
+    await this.configuracionContactosPage.assertUnidadDecisionAssignedToEconomicGroupMember(
+      this.currentUnidadDecision
+    );
+  }
+);
+
+When('creo una tipología para asignarla a contactos', async function (this: CustomWorld) {
+  this.currentTipologiaContactos = createTipologiaContactosTestData();
+  await this.configuracionContactosPage.createTipologia(this.currentTipologiaContactos.tipologiaNueva);
+});
+
+When('creo un contacto para asignarle tipologías', async function (this: CustomWorld) {
+  if (!this.currentTipologiaContactos) {
+    throw new Error('No existen datos de tipologia en el escenario actual.');
+  }
+
+  await this.contactosPage.createContactoParaTipologias(this.currentTipologiaContactos);
+});
+
+When('asigno la tipología nueva y otra existente al contacto', async function (
+  this: CustomWorld
+) {
+  if (!this.currentTipologiaContactos) {
+    throw new Error('No existen datos de tipologia en el escenario actual.');
+  }
+
+  await this.contactosPage.assignTipologiasToCurrentContact(this.currentTipologiaContactos);
+});
+
+Then('debería visualizar las tipologías asignadas en el contacto', async function (this: CustomWorld) {
+  if (!this.currentTipologiaContactos) {
+    throw new Error('No existen datos de tipologia en el escenario actual.');
+  }
+
+  await this.contactosPage.assertTipologiasAssignedToCurrentContact(this.currentTipologiaContactos);
+});
+
+Then('debería documentar que no existe filtro visible por tipología en el listado', async function (
+  this: CustomWorld
+) {
+  if (!this.currentTipologiaContactos) {
+    throw new Error('No existen datos de tipologia en el escenario actual.');
+  }
+
+  const note = await this.contactosPage.assertTipologiaFilterIsNotVisible(this.currentTipologiaContactos);
+  await this.attach(note, 'text/plain');
+});
+
+

@@ -3,7 +3,7 @@ export const selectors = {
     usernameInput: 'input[name="login"]',
     passwordInput: 'input[name="password"]',
     submitButton: 'button[type="submit"]',
-    homeTitle: '.o_main_navbar'
+    homeTitle: '.o_main_navbar, .o_home_menu, .o_app'
   },
   common: {
     successMessage: '[data-testid="success-message"]',
@@ -37,6 +37,8 @@ export const selectors = {
       ageField:
         'xpath=//*[normalize-space()="Edad" or normalize-space()="Edad?"]/following::*[self::input or self::span or self::div][1]',
       birthDateInput: 'div[name="fecha_nacimiento"] input, input[data-field="fecha_nacimiento"]',
+      birthCountryInput:
+        'div[name="pais_nacimiento_id"] input, div[name="country_birth_id"] input, div[name="birth_country_id"] input',
       validationDialogCloseButton: '.modal button:has-text("Cerrar"), .modal button:has-text("Aceptar")',
       fallecidoInput:
         'div[name="fallecido"] input, div[name="is_deceased"] input, div[name="deceased"] input, input[name="fallecido"], input[name="is_deceased"], input[name="deceased"]',
@@ -65,6 +67,7 @@ export const selectors = {
         tabPersonasRelacionadas: 'Personas relacionadas',
         tabCodigosCnae: 'Códigos CNAE',
         tabInformacionFiscalIae: 'Información Fiscal / IAE',
+        tabInformeCliente: 'Informe Cliente',
         tabBancoEspana: 'Banco de España',
         tabRegistroMercantil: 'Registro Mercantil',
         situacionBe: 'Situación BE',
@@ -83,6 +86,18 @@ export const selectors = {
         codigoPostal: 'Código Postal'
       },
       nameInput: 'div[name="name"] input, h1 input[placeholder*="Lumber"], h1 input',
+      informeCliente: {
+        experienciaCliente:
+          'div[name="experiencia_cliente"] textarea, div[name="experiencia_cliente"] input, textarea[name="experiencia_cliente"], input[name="experiencia_cliente"]',
+        descripcionActividad:
+          'div[name="descripcion_actividad"] textarea, div[name="descripcion_actividad"] input, textarea[name="descripcion_actividad"], input[name="descripcion_actividad"]',
+        instalacionesMaquinaria:
+          'div[name="instalaciones_maquinaria"] textarea, div[name="instalaciones_maquinaria"] input, textarea[name="instalaciones_maquinaria"], input[name="instalaciones_maquinaria"]',
+        proveedoresHabituales:
+          'div[name="proveedores_cliente"] textarea, div[name="proveedores_habituales"] textarea, div[name="proveedores_cliente"] input, div[name="proveedores_habituales"] input, textarea[name="proveedores_cliente"], textarea[name="proveedores_habituales"], input[name="proveedores_cliente"], input[name="proveedores_habituales"]',
+        clientesRelevantes:
+          'div[name="clientes_relevantes"] textarea, div[name="clientes_relevantes"] input, textarea[name="clientes_relevantes"], input[name="clientes_relevantes"]'
+      },
       direccionAutocompleteOption:
         '.o-autocomplete--dropdown-item, .dropdown-menu .dropdown-item, .ui-menu-item, .o_select_menu_item, [role="option"], [role="menuitem"]',
       tipoViaInput:
@@ -153,5 +168,52 @@ export const selectors = {
       inscripcionInput:
         'input[id^="inscription"], div[name="inscription"] input, div[name="registry_entry"] input, div[name="inscripcion"] input, div[name="registro_mercantil_inscripcion"] input, input[name="inscription"], input[name="registry_entry"], input[name="inscripcion"]'
     }
+  },
+  configuracionContactos: {
+    menus: {
+      configuracion: 'Configuración',
+      formasJuridicas: 'Formas jurídicas',
+      vinculaciones: 'Vínculos de socios',
+      tipologias: 'Tipología'
+    },
+    labels: {
+      nombre: 'Nombre',
+      codigo: 'Código'
+    },
+    form: {
+      saveButton: 'button[aria-label="Guardar manualmente"], button:has-text("Guardar")',
+      discardButton: 'button[aria-label="Descartar todos los cambios"], button:has-text("Descartar")',
+      nameInput: 'div[name="name"] input, input[name="name"], input[placeholder*="Nombre"]',
+      codeInput: 'div[name="code"] input, input[name="code"], div[name="codigo"] input, input[name="codigo"]',
+      descriptionInput:
+        'div[name="description"] textarea, div[name="descripcion"] textarea, div[name="description"] input, div[name="descripcion"] input, textarea[name="description"], textarea[name="descripcion"], input[name="description"], input[name="descripcion"]'
+    },
+    grupoEconomico: {
+      memberRows: 'div[name="member_ids"] tr.o_data_row',
+      decisionUnitCell: 'td[name="decision_unit_id"]',
+      decisionUnitInput: 'td[name="decision_unit_id"] input[role="combobox"], td[name="decision_unit_id"] input',
+      autocompleteOption:
+        '.o-autocomplete--dropdown-item, .dropdown-menu .dropdown-item, .ui-menu-item, .o_select_menu_item, [role="option"], [role="menuitem"]'
+    },
+    searchInput: '.o_searchview input[type="text"], input.o_searchview_input, [role="searchbox"]',
+    rows: '.o_data_row, tbody tr',
+    firstResult: '.o_data_row:first-child, tbody tr:first-child',
+    duplicateValidationDialog:
+      '.modal:has-text("Error de validación"), .modal:has-text("duplic"), .o_dialog:has-text("Error de validación")',
+    validationText:
+      '.modal, .o_dialog, .o_notification, .o_notification_content, .invalid-feedback, .text-danger',
+    dialogCloseButton: '.modal button:has-text("Cerrar"), .modal button:has-text("Aceptar"), .o_dialog button:has-text("Cerrar")'
+  },
+  tipologias: {
+    tagInput:
+      'div[name="category_id"] input, div[name="category_ids"] input, div[name="typology_ids"] input, div[name="tipologia_ids"] input, div[name="tipologias_ids"] input',
+    tagContainer:
+      'div[name="category_id"], div[name="category_ids"], div[name="typology_ids"], div[name="tipologia_ids"], div[name="tipologias_ids"]',
+    autocompleteOption:
+      '.o-autocomplete--dropdown-item, .dropdown-menu .dropdown-item, .ui-menu-item, .o_select_menu_item, [role="option"], [role="menuitem"]',
+    listFilterButton:
+      'button:has-text("Filtros"), button:has-text("Filters"), .o_searchview_dropdown_toggler',
+    typologyFilterOption:
+      '[role="menuitem"]:has-text("Tipología"), [role="option"]:has-text("Tipología"), .dropdown-item:has-text("Tipología"), [role="menuitem"]:has-text("Tipologia"), [role="option"]:has-text("Tipologia"), .dropdown-item:has-text("Tipologia")'
   }
 } as const;

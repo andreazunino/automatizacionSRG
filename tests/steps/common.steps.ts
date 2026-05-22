@@ -10,6 +10,12 @@ Given('que inicio sesión en la aplicación', async function (this: CustomWorld)
   await this.loginPage.assertHomeIsVisible();
 });
 
+Given('que inicio sesión como administrador', async function (this: CustomWorld) {
+  await this.loginPage.navigateToApplication();
+  await this.loginPage.loginAs('admin');
+  await this.loginPage.assertHomeIsVisible();
+});
+
 When('inicio sesión con credenciales válidas', async function (this: CustomWorld) {
   await this.loginPage.login();
 });

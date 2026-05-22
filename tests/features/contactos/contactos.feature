@@ -42,6 +42,32 @@ Característica: Gestión de Contactos
     Cuando creo una persona física con NIE válido
     Entonces debería visualizar la persona física guardada con NIE válido
 
+  @per-017
+  Escenario: Intentar guardar persona física sin país de nacimiento
+    Dado que inicio sesión en la aplicación
+    Y accedo al módulo Contactos
+    Cuando intento guardar una persona física sin país de nacimiento
+    Entonces debería visualizar la validación de país de nacimiento obligatorio
+
+  @per-018
+  Escenario: Completar y guardar los campos de Informe Cliente en una empresa
+    Dado que inicio sesión en la aplicación
+    Y accedo al módulo Contactos
+    Cuando creo una empresa para completar Informe Cliente
+    Y completo y guardo los campos de Informe Cliente
+    Entonces debería visualizar los campos de Informe Cliente guardados al reabrir la empresa
+
+  @per-025
+  Escenario: Asignar múltiples tipologías a un contacto y documentar ausencia de filtro por tipología
+    Dado que inicio sesión como administrador
+    Y accedo al módulo Contactos
+    Cuando creo una tipología para asignarla a contactos
+    Y accedo al módulo Contactos
+    Y creo un contacto para asignarle tipologías
+    Y asigno la tipología nueva y otra existente al contacto
+    Entonces debería visualizar las tipologías asignadas en el contacto
+    Y debería documentar que no existe filtro visible por tipología en el listado
+
   @per-006
   Escenario: Asignar múltiples CNAEs a una empresa y gestionar el CNAE principal
     Dado que inicio sesión en la aplicación
@@ -49,6 +75,14 @@ Característica: Gestión de Contactos
     Cuando creo una empresa para gestionar sus CNAEs
     Y asigno múltiples CNAEs e intento marcar ambos como principal
     Entonces debería visualizar ambos CNAEs y un único CNAE principal actualizado
+
+  @per-028
+  Escenario: Intentar asignar el mismo código CNAE dos veces a la misma empresa
+    Dado que inicio sesión en la aplicación
+    Y accedo al módulo Contactos
+    Cuando creo una empresa para validar CNAE duplicado
+    Y intento asignar el mismo código CNAE dos veces a la empresa
+    Entonces debería visualizar la validación de CNAE duplicado sin guardar el duplicado
 
   @per-007
   Escenario: Gestionar epígrafes IAE con fecha de baja y actividad económica
@@ -117,47 +151,21 @@ Característica: Gestión de Contactos
     Entonces debería visualizar los datos del Registro Mercantil guardados correctamente
     Cuando intento guardar una fecha de inscripción futura en el Registro Mercantil
     Entonces debería visualizar la validación de fecha de inscripción futura
-
-  @no_implementado
-  Escenario: Crear contacto
-    Dado que inicio sesión en la aplicación
+  @per-015
+  Escenario: Crear forma jurídica, rechazar duplicado exacto y crear vinculación
+    Dado que inicio sesión como administrador
     Y accedo al módulo Contactos
-    Cuando creo un contacto con datos válidos
-    Entonces debería visualizar el mensaje de contacto creado
-    Y el contacto debería aparecer en la búsqueda
+    Cuando creo una forma jurídica desde configuración
+    Y intento crear otra forma jurídica con el mismo código exacto
+    Entonces debería visualizar el rechazo por código duplicado exacto
+    Cuando creo una vinculación desde configuración
+    Entonces debería visualizar la vinculación disponible en configuración
 
-  Escenario: Buscar contacto
-    Dado que inicio sesión en la aplicación
+  @per-016
+  Escenario: Crear unidad de decisión y vincularla con miembros del grupo económico
+    Dado que inicio sesión como administrador
     Y accedo al módulo Contactos
-    Cuando busco un contacto existente
-    Entonces debería visualizar el contacto en los resultados
+    Cuando creo una unidad de decisión desde configuración
+    Y vinculo la unidad de decisión con un miembro de un grupo económico existente
+    Entonces debería visualizar la unidad de decisión asignada al miembro del grupo económico
 
-  @no_implementado
-  Escenario: Editar contacto
-    Dado que inicio sesión en la aplicación
-    Y accedo al módulo Contactos
-    Cuando edito un contacto existente
-    Entonces debería visualizar el mensaje de contacto actualizado
-    Y debería visualizar los datos actualizados del contacto
-
-  @no_implementado
-  Escenario: Eliminar contacto
-    Dado que inicio sesión en la aplicación
-    Y accedo al módulo Contactos
-    Cuando elimino un contacto existente
-    Entonces debería visualizar el mensaje de contacto eliminado
-    Y el contacto no debería aparecer en la búsqueda
-
-  @no_implementado
-  Escenario: Validar campos obligatorios
-    Dado que inicio sesión en la aplicación
-    Y accedo al módulo Contactos
-    Cuando intento crear un contacto sin completar campos obligatorios
-    Entonces debería visualizar los mensajes de campos obligatorios
-
-  @no_implementado
-  Escenario: Validar contacto duplicado
-    Dado que inicio sesión en la aplicación
-    Y accedo al módulo Contactos
-    Cuando intento crear un contacto duplicado
-    Entonces debería visualizar el mensaje de contacto duplicado

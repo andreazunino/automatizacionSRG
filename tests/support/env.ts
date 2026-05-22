@@ -25,7 +25,13 @@ export const env = {
   },
   qaUser: process.env.QA_USER || process.env.INTERNAL_USER || '',
   qaPassword: process.env.QA_PASSWORD || process.env.INTERNAL_PASSWORD || '',
-  headless: parseBoolean(process.env.HEADLESS, true)
+  headless: parseBoolean(process.env.HEADLESS, true),
+  actionUrls: {
+    formasJuridicas: process.env.ACTION_FORMAS_JURIDICAS || '/odoo/action-754',
+    vinculaciones: process.env.ACTION_VINCULACIONES || '/odoo/action-880',
+    unidadesDecision: process.env.ACTION_UNIDADES_DECISION || '/odoo/action-900',
+    gruposEconomicos: process.env.ACTION_GRUPOS_ECONOMICOS || '/odoo/action-882'
+  }
 } as const;
 
 export type UserRole = keyof typeof env.credentials;

@@ -8,16 +8,23 @@ import type {
   EmpresaIaeTestData,
   EmpresaInformeClienteTestData,
   MaestroContactosTestData,
+  NaturalezaT4TestData,
   EmpresaRegistroMercantilTestData,
   EmpresaRepresentanteTestData,
   PersonaFisicaDocumentoTestData,
   PersonaFisicaTestData,
+  ConceptoComisionHuerfanoTestData,
+  ConceptoComisionNoProtegidoTestData,
+  ProductoComisionTestData,
+  ProductoFinancieroTestData,
+  TipologiaProductoTestData,
   TipologiaContactosTestData,
   UnidadDecisionTestData
 } from '../fixtures/testData';
 import { ConfiguracionContactosPage } from '../pages/ConfiguracionContactosPage';
 import { ContactosPage } from '../pages/ContactosPage';
 import { LoginPage } from '../pages/LoginPage';
+import { ProductosPage } from '../pages/ProductosPage';
 
 export class CustomWorld extends World {
   context!: BrowserContext;
@@ -25,8 +32,15 @@ export class CustomWorld extends World {
   loginPage!: LoginPage;
   contactosPage!: ContactosPage;
   configuracionContactosPage!: ConfiguracionContactosPage;
+  productosPage!: ProductosPage;
   currentPersonaFisica?: PersonaFisicaTestData;
   currentPersonaFisicaDocumento?: PersonaFisicaDocumentoTestData;
+  currentConceptoComisionHuerfano?: ConceptoComisionHuerfanoTestData;
+  currentConceptoComisionNoProtegido?: ConceptoComisionNoProtegidoTestData;
+  conceptoComisionHuerfanoBloqueadoEnConfiguracion?: boolean;
+  currentProductoComision?: ProductoComisionTestData;
+  currentProductoFinanciero?: ProductoFinancieroTestData;
+  currentTipologiaProducto?: TipologiaProductoTestData;
   currentEmpresaBancoEspana?: EmpresaBancoEspanaTestData;
   currentEmpresaCnae?: EmpresaCnaeTestData;
   currentEmpresaCnaeDuplicado?: EmpresaCnaeDuplicadoTestData;
@@ -34,6 +48,7 @@ export class CustomWorld extends World {
   currentEmpresaIae?: EmpresaIaeTestData;
   currentEmpresaInformeCliente?: EmpresaInformeClienteTestData;
   currentMaestroContactos?: MaestroContactosTestData;
+  currentNaturalezaT4?: NaturalezaT4TestData;
   currentEmpresaRegistroMercantil?: EmpresaRegistroMercantilTestData;
   currentEmpresaRepresentante?: EmpresaRepresentanteTestData;
   currentUnidadDecision?: UnidadDecisionTestData;
@@ -47,6 +62,7 @@ export class CustomWorld extends World {
     this.loginPage = new LoginPage(this.page);
     this.contactosPage = new ContactosPage(this.page);
     this.configuracionContactosPage = new ConfiguracionContactosPage(this.page);
+    this.productosPage = new ProductosPage(this.page);
   }
 }
 

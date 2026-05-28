@@ -2,6 +2,70 @@
 
 Los escenarios Gherkin deben representar flujos de usuario validables desde la interfaz web. No se deben automatizar como casos E2E los escenarios que dependan principalmente de procesos técnicos, integraciones externas o funcionalidades no disponibles.
 
+## Modulo Productos
+
+Los escenarios del modulo `productos` estan en `tests/features/productos/productos.feature` y cubren productos financieros, productos de comision, lineas de comision, maestros, seguridad y validaciones de UI.
+
+### Configuracion requerida
+
+El modulo usa URLs y credenciales desde variables de entorno. No deben hardcodearse en features, steps ni pages.
+
+Variables relevantes:
+
+- `BASE_URL`
+- `PRODUCTS_URL`
+- `COMMISSION_PRODUCTS_URL`
+- `ADMIN_USER`
+- `ADMIN_PASSWORD`
+- `PRODUCT_USER`
+- `PRODUCT_PASSWORD`
+
+`PRODUCTS_URL` debe apuntar a la accion de Productos financieros. Para el entorno de pruebas actual se uso como referencia:
+
+```text
+https://atlas-pruebas.odoo.com/odoo/action-1194
+```
+
+`COMMISSION_PRODUCTS_URL` debe apuntar a la accion real de Productos de comision del entorno. Si no esta configurada, los escenarios `@prd-013` y parte de `@ui-002` no son ejecutables de punta a punta.
+
+### Criterios de implementacion
+
+- Los escenarios se mantienen en espanol y orientados a negocio.
+- Las tablas Gherkin se usan cuando el mismo flujo valida multiples campos o subcasos.
+- La logica Playwright vive en `tests/pages/ProductosPage.ts`; los steps solo orquestan llamadas al Page Object.
+- Los selectores reutilizables viven en `tests/utils/selectors.ts`.
+- Los datos reutilizables y factories viven en `tests/fixtures/testData.ts`.
+- Las fechas se calculan de forma relativa en el codigo cuando el caso depende de "hoy", "hoy - 1 mes" o valores equivalentes.
+
+### Notas funcionales y acotaciones
+
+- `PRD-001`: valida el ciclo completo de estado. Al archivar, `Fecha baja` debe informarse con la fecha actual; al desarchivar debe quedar vacia y el producto debe volver a la lista activa.
+- `PRD-004`, `PRD-005`, `LIN-004` y `LIN-005`: son data-driven. Las tablas de datos representan subcasos independientes sobre el mismo flujo de edicion/guardado.
+- `PRD-005`: existe un bug conocido de alerta duplicada por inactividad. No bloquea la automatizacion; las validaciones ignoran esa alerta si aparece y continuan con la comprobacion funcional.
+- `PRD-011`, `PRD-012` y `PRD-013-N`: el comportamiento observado no muestra un mensaje de error al intentar solapar excluidos e incluidos. Al elegir un valor como excluido, deja de aparecer en el selector de incluidos. Por eso la automatizacion valida la desaparicion del valor en el selector, no una modal de validacion.
+- `LIN-003`: el concepto huerfano requiere intentar crear primero un concepto de comision sin `Producto de comision`. En la aplicacion actual la validacion puede dispararse ya al guardar el maestro, antes de usarlo en una linea de producto. Ese comportamiento se considera valido para el caso.
+- `LIN-005`: en la inspeccion de la pantalla real de `Productos financieros > Conceptos` no se encontraron campos visibles separados para `Rango Estandar` y `Umbral Permiso`. El caso se automatiza sobre las reglas visibles equivalentes: `Plazo min. <= Plazo max.`, `Imp. min. <= Imp. max.`, `% min. <= % max.` y `PD min. <= PD max.`.
+- `LIN-006`: para periodicidades `Trimestral` y `Semestral`, la duracion esperada se autocompleta en 3 y 6 meses respectivamente y los campos quedan bloqueados.
+- `MAE-001`: en conceptos protegidos solo debe permitirse modificar `Producto de comision`; `Nombre` y `Codigo` deben permanecer readonly y el registro no debe poder eliminarse.
+- `MAE-007`: Naturaleza T4 es un maestro necesario para configurar Grupo de producto (`atlas.naturaleza.t4`). El selector de Grupo de producto debe mostrar solo registros activos.
+- `UI-003`: valida el comportamiento visible de la linea en `Conceptos`. Al seleccionar `Modo = Importe`, se esperan campos de importe visibles y campos porcentuales ocultos; con `Modo = Porcentual` se invierte. Con `Periodicidad = Al tiron`, el bloque de duracion debe ocultarse sin necesidad de guardar.
+
+### Ejecucion recomendada
+
+Dry-run tecnico del modulo:
+
+```bash
+npx cucumber-js tests/features/productos/productos.feature --tags "@productos" --dry-run
+```
+
+Ejecucion de un caso puntual:
+
+```bash
+npx cucumber-js tests/features/productos/productos.feature --tags "@lin-006"
+```
+
+Antes de ejecutar contra Odoo, validar que las URLs de acciones y credenciales del entorno correspondan al usuario/rol requerido por cada escenario.
+
 ## Casos excluidos
 
 Los siguientes casos quedan fuera del alcance automatizable del framework:
@@ -21,7 +85,6 @@ Si un escenario queda documentado temporalmente en un `.feature`, debe marcarse 
 - `@rpc`
 - `@api_externa`
 - `@bug_bloqueante`
-- `@no_implementado`
 
 Ejemplo:
 

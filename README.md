@@ -87,7 +87,6 @@ Cucumber excluye automaticamente estos tags:
 - `@rpc`
 - `@api_externa`
 - `@bug_bloqueante`
-- `@no_implementado`
 
 ## Reportes y evidencias
 
@@ -114,11 +113,11 @@ Ejemplo:
 
 ```gherkin
 # language: es
-Escenario: Buscar contacto por documento
+Escenario: Crear persona física con datos completos
   Dado que inicio sesion en la aplicacion
   Y accedo al modulo Contactos
-  Cuando busco un contacto existente
-  Entonces deberia visualizar el contacto en los resultados
+  Cuando creo una persona fisica con todos los campos de identidad
+  Entonces deberia visualizar la persona fisica guardada con nombre completo calculado
 ```
 
 ## Agregar un nuevo modulo
@@ -136,3 +135,7 @@ Los step definitions deben llamar metodos de pages. No se debe escribir logica P
 ## Estado inicial
 
 Los selectores y datos incluidos son placeholders basados en `data-testid`. Antes de ejecutar contra una aplicacion real, reemplazar los valores de `tests/utils/selectors.ts` por los selectores reales del sistema.
+
+## Notas funcionales Productos
+
+- `LIN-005`: en la inspeccion de la pantalla real de `Productos financieros > Conceptos` no se encontraron campos visibles ni columnas opcionales separadas para `Rango Estandar` y `Umbral Permiso`. El caso se automatiza sobre las reglas de coherencia visibles en la grilla: `Plazo min. <= Plazo max.`, `Imp. min. <= Imp. max.`, `% min. <= % max.` y `PD min. <= PD max.`.

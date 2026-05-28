@@ -1327,13 +1327,15 @@ export class ContactosPage extends BasePage {
     value: string
   ): Promise<void> {
     const input = await this.bancoEspanaInput(accessibleName, configuredSelector);
+    const field = this.bancoEspanaField(input);
 
     await this.assertNoUnexpectedApplicationError();
+    await input.click();
     await input.fill('');
     await input.pressSequentially(value);
-    await this.selectBancoEspanaAutocompleteOptionIfNeeded(input, value);
+    await this.selectBancoEspanaAutocompleteOptionIfNeeded(input, field, value);
     await this.assertNoUnexpectedApplicationError();
-    await this.assertInputContainsValue(input, value);
+    await this.assertInputOrFieldContainsValue(input, field, value);
   }
 
   private async assertBancoEspanaFieldValue(
@@ -1342,8 +1344,9 @@ export class ContactosPage extends BasePage {
     expectedValue: string
   ): Promise<void> {
     const input = await this.bancoEspanaInput(accessibleName, configuredSelector);
+    const field = this.bancoEspanaField(input);
 
-    await this.assertInputContainsValue(input, expectedValue);
+    await this.assertInputOrFieldContainsValue(input, field, expectedValue);
   }
 
   private async bancoEspanaInput(accessibleName: string, configuredSelector: string): Promise<Locator> {
@@ -1378,7 +1381,17 @@ export class ContactosPage extends BasePage {
     return fallbackInput;
   }
 
-  private async selectBancoEspanaAutocompleteOptionIfNeeded(input: Locator, value: string): Promise<void> {
+  private bancoEspanaField(input: Locator): Locator {
+    return input.locator(
+      'xpath=ancestor::*[@name or contains(@class, "o_field_widget") or contains(@class, "o_field_many2one")][1]'
+    );
+  }
+
+  private async selectBancoEspanaAutocompleteOptionIfNeeded(
+    input: Locator,
+    field: Locator,
+    value: string
+  ): Promise<void> {
     const option = this.page
       .locator(selectors.contactos.empresa.bancoEspanaAutocompleteOption)
       .filter({ hasText: new RegExp(this.escapeRegExp(value), 'i') })
@@ -1387,13 +1400,20 @@ export class ContactosPage extends BasePage {
 
     try {
       await option.waitFor({ state: 'visible', timeout: 3000 });
-      await option.click();
+      await option.click({ timeout: 5000 });
+      await input.press('Tab').catch(() => undefined);
       return;
-    } catch {
-      const currentValue = (await input.inputValue()).trim();
+    } catch (error) {
+      if (error instanceof Error && /detached from the DOM/i.test(error.message)) {
+        await this.page.keyboard.press('Enter');
+        return;
+      }
 
-      if (new RegExp(this.escapeRegExp(value), 'i').test(currentValue)) {
-        await input.press('Tab');
+      const currentValue = (await input.inputValue()).trim();
+      const fieldText = ((await field.textContent().catch(() => '')) ?? '').trim();
+
+      if (new RegExp(this.escapeRegExp(value), 'i').test(`${currentValue} ${fieldText}`)) {
+        await input.press('Tab').catch(() => undefined);
         return;
       }
 
@@ -1415,6 +1435,25 @@ export class ContactosPage extends BasePage {
       .poll(async () => (await input.inputValue()).trim(), {
         message: `Esperaba que el campo contenga el valor ${expectedValue}`
       })
+      .toMatch(new RegExp(this.escapeRegExp(expectedValue), 'i'));
+  }
+
+  private async assertInputOrFieldContainsValue(
+    input: Locator,
+    field: Locator,
+    expectedValue: string
+  ): Promise<void> {
+    await expect
+      .poll(
+        async () => {
+          const inputValue = (await input.inputValue().catch(() => '')).trim();
+          const fieldText = ((await field.textContent().catch(() => '')) ?? '').trim();
+          return `${inputValue} ${fieldText}`.trim();
+        },
+        {
+          message: `Esperaba que el campo contenga el valor ${expectedValue}`
+        }
+      )
       .toMatch(new RegExp(this.escapeRegExp(expectedValue), 'i'));
   }
 

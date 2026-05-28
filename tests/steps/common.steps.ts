@@ -23,3 +23,14 @@ When('inicio sesión con credenciales válidas', async function (this: CustomWor
 Then('debería visualizar la pantalla principal', async function (this: CustomWorld) {
   await this.loginPage.assertHomeIsVisible();
 });
+
+Given('que inicio sesion en la aplicacion', async function (this: CustomWorld) {
+  await this.loginPage.loginWithValidCredentials();
+  await this.loginPage.assertHomeIsVisible();
+});
+
+Given('que inicio sesion como administrador', async function (this: CustomWorld) {
+  await this.loginPage.navigateToApplication();
+  await this.loginPage.loginAs('admin');
+  await this.loginPage.assertHomeIsVisible();
+});

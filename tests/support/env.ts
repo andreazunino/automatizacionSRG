@@ -33,6 +33,7 @@ export const env = {
   qaPassword: process.env.QA_PASSWORD || process.env.INTERNAL_PASSWORD || '',
   headless: parseBoolean(process.env.HEADLESS, true),
   actionUrls: {
+    bienes: process.env.ACTION_BIENES || '/odoo/action-858',
     formasJuridicas: process.env.ACTION_FORMAS_JURIDICAS || '/odoo/action-754',
     vinculaciones: process.env.ACTION_VINCULACIONES || '/odoo/action-880',
     unidadesDecision: process.env.ACTION_UNIDADES_DECISION || '/odoo/action-900',

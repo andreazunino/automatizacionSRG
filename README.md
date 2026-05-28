@@ -23,6 +23,9 @@ Crear un archivo `.env` a partir de `.env.example`:
 ```env
 BASE_URL=https://atlas-pruebas.odoo.com/web/login?redirect=%2Fodoo%3F
 CONTACTS_URL=https://atlas-pruebas.odoo.com/odoo/contacts
+PRODUCTS_URL=https://atlas-pruebas.odoo.com/odoo/action-1194
+COMMISSION_PRODUCTS_URL=https://atlas-pruebas.odoo.com/odoo/action-1194
+ACTION_BIENES=https://atlas-pruebas.odoo.com/odoo/action-858
 ADMIN_USER=usuario_admin
 ADMIN_PASSWORD=password_admin
 INTERNAL_USER=usuario_interno
@@ -46,6 +49,18 @@ Ejecutar solo el modulo Contactos:
 
 ```bash
 npm run test:contactos
+```
+
+Ejecutar solo el modulo Productos:
+
+```bash
+npm run test:productos
+```
+
+Ejecutar solo el modulo Bienes:
+
+```bash
+npm run test:bienes
 ```
 
 Ejecutar con navegador visible:
@@ -127,14 +142,60 @@ Para sumar modulos como Expedientes, Riesgos o Garantias:
 1. Crear `tests/features/<modulo>/<modulo>.feature`.
 2. Crear `tests/pages/<Modulo>Page.ts`.
 3. Crear `tests/steps/<modulo>.steps.ts`.
-4. Centralizar selectores nuevos en `tests/utils/selectors.ts`.
-5. Centralizar datos reutilizables en `tests/fixtures/testData.ts`.
+4. Crear selectores del modulo en `tests/utils/selectors/<modulo>Selectors.ts`.
+5. Reutilizar selectores comunes desde `tests/utils/selectors/commonSelectors.ts` o `tests/utils/selectors/odooCommonSelectors.ts`.
+6. Crear datos/factories del modulo en `tests/fixtures/<modulo>/<modulo>Data.ts`.
+7. Registrar Pages o estado compartido en `tests/support/world.ts` solo si el escenario lo necesita.
 
 Los step definitions deben llamar metodos de pages. No se debe escribir logica Playwright directamente en los steps.
 
+## Organizacion tecnica
+
+La estructura esta separada por responsabilidad para facilitar mantenimiento y commits por bloque:
+
+```text
+tests/features/<modulo>/
+tests/steps/<modulo>.steps.ts
+tests/pages/<Modulo>Page.ts
+tests/fixtures/<modulo>/<modulo>Data.ts
+tests/utils/selectors/<modulo>Selectors.ts
+```
+
+Selectores comunes:
+
+- `tests/utils/selectors/loginSelectors.ts`
+- `tests/utils/selectors/commonSelectors.ts`
+- `tests/utils/selectors/odooCommonSelectors.ts`
+
+Selectores por modulo:
+
+- `tests/utils/selectors/contactosSelectors.ts`
+- `tests/utils/selectors/configuracionContactosSelectors.ts`
+- `tests/utils/selectors/tipologiasSelectors.ts`
+- `tests/utils/selectors/bienesSelectors.ts`
+- `tests/utils/selectors/productosSelectors.ts`
+- `tests/utils/selectors/productosComisionSelectors.ts`
+- `tests/utils/selectors/conceptosComisionSelectors.ts`
+- `tests/utils/selectors/tipologiasProductoSelectors.ts`
+- `tests/utils/selectors/naturalezaT4Selectors.ts`
+
+Datos por modulo:
+
+- `tests/fixtures/contactos/contactosData.ts`
+- `tests/fixtures/bienes/tipoBienData.ts`
+- `tests/fixtures/productos/productosData.ts`
+
+`tests/fixtures/testData.ts` queda como barrel de compatibilidad para exports existentes. No agregar datos nuevos ahi; los nuevos datos deben ir en la carpeta del modulo correspondiente.
+
 ## Estado inicial
 
-Los selectores y datos incluidos son placeholders basados en `data-testid`. Antes de ejecutar contra una aplicacion real, reemplazar los valores de `tests/utils/selectors.ts` por los selectores reales del sistema.
+Los selectores deben mantenerse en los archivos de `tests/utils/selectors/`. Antes de ejecutar contra una aplicacion real, validar que los selectores del modulo apunten a campos, botones y listas reales del sistema.
+
+## Modulos actuales
+
+- Contactos: `tests/features/contactos/contactos.feature`
+- Productos: `tests/features/productos/productos.feature`
+- Bienes: `tests/features/bienes/bienes.feature`
 
 ## Notas funcionales Productos
 

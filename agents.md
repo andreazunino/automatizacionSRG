@@ -25,6 +25,11 @@ El proyecto debe ser mantenible por perfiles QA técnicos y semi técnicos.
 - Mantener escenarios Gherkin legibles para QA manual y funcionales.
 - Los escenarios deben escribirse en español.
 - Centralizar selectores y datos reutilizables.
+- Separar selectores y datos por modulo:
+  - Selectores comunes: `tests/utils/selectors/commonSelectors.ts`, `tests/utils/selectors/odooCommonSelectors.ts` o archivos comunes equivalentes.
+  - Selectores de modulo: `tests/utils/selectors/<modulo>Selectors.ts`.
+  - Datos/factories de modulo: `tests/fixtures/<modulo>/<modulo>Data.ts`.
+  - No agregar nuevos selectores o datos en archivos centrales legacy.
 - No hardcodear credenciales ni URLs.
 - Usar TypeScript estricto.
 - Mantener carpetas separadas:

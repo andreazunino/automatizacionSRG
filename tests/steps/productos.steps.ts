@@ -1,4 +1,4 @@
-import { DataTable, Given, Then, When } from '@cucumber/cucumber';
+﻿import { DataTable, Given, Then, When } from '@cucumber/cucumber';
 import {
   createConceptoComisionHuerfanoTestData,
   createConceptoComisionNoProtegidoTestData,
@@ -6,7 +6,7 @@ import {
   createProductoComisionTestData,
   createProductoFinancieroTestData,
   createTipologiaProductoTestData
-} from '../fixtures/testData';
+} from '../fixtures/productos/productosData';
 import type { CustomWorld } from '../support/world';
 
 When('accedo al modulo Productos financieros', async function (this: CustomWorld) {
@@ -597,7 +597,7 @@ When('verifico permisos completos del rol gestor de productos', async function (
     nombre: this.currentProductoComision.nombre,
     nombreEditado: `${this.currentProductoComision.nombre} v2`,
     codigo: `seg${Date.now().toString().slice(-6)}`,
-    productoComision: 'Comisión aval Producto'
+    productoComision: 'ComisiÃ³n aval Producto'
   });
   this.currentTipologiaProducto = createTipologiaProductoTestData();
   await this.productosPage.manageProductTypologyAndArchive(this.currentTipologiaProducto);
@@ -647,3 +647,4 @@ Then('deberia alternar campos de importe porcentaje y duracion segun modo y peri
     'text/plain'
   );
 });
+

@@ -33,9 +33,56 @@ https://atlas-pruebas.odoo.com/odoo/action-1194
 - Los escenarios se mantienen en espanol y orientados a negocio.
 - Las tablas Gherkin se usan cuando el mismo flujo valida multiples campos o subcasos.
 - La logica Playwright vive en `tests/pages/ProductosPage.ts`; los steps solo orquestan llamadas al Page Object.
-- Los selectores reutilizables viven en `tests/utils/selectors.ts`.
-- Los datos reutilizables y factories viven en `tests/fixtures/testData.ts`.
+- Los selectores reutilizables del modulo viven en `tests/utils/selectors/productosSelectors.ts` y archivos relacionados.
+- Los datos reutilizables y factories viven en `tests/fixtures/productos/productosData.ts`.
 - Las fechas se calculan de forma relativa en el codigo cuando el caso depende de "hoy", "hoy - 1 mes" o valores equivalentes.
+
+## Modulo Contactos
+
+Los escenarios del modulo `contactos` estan en `tests/features/contactos/contactos.feature` y cubren personas fisicas, personas juridicas, datos fiscales, CNAE, IAE, Banco de Espana, Registro Mercantil, tipologias y maestros de configuracion.
+
+### Implementacion
+
+- Page principal: `tests/pages/ContactosPage.ts`.
+- Page de configuracion: `tests/pages/ConfiguracionContactosPage.ts`.
+- Steps: `tests/steps/contactos.steps.ts`.
+- Selectores principales: `tests/utils/selectors/contactosSelectors.ts`.
+- Selectores de configuracion: `tests/utils/selectors/configuracionContactosSelectors.ts`.
+- Selectores de tipologias: `tests/utils/selectors/tipologiasSelectors.ts`.
+- Datos y factories: `tests/fixtures/contactos/contactosData.ts`.
+
+## Modulo Bienes
+
+Los escenarios del modulo `bienes` estan en `tests/features/bienes/bienes.feature`.
+
+### Implementacion
+
+- Page principal: `tests/pages/BienesPage.ts`.
+- Steps: `tests/steps/bienes.steps.ts`.
+- Selectores: `tests/utils/selectors/bienesSelectors.ts`.
+- Datos y factories: `tests/fixtures/bienes/tipoBienData.ts`.
+- URL configurable: `ACTION_BIENES`.
+
+El caso `TC-001` valida crear, editar, archivar y activar un Tipo de Bienes desde la UI.
+
+## Estructura por modulo
+
+Cada modulo nuevo debe seguir esta forma:
+
+```text
+tests/features/<modulo>/<modulo>.feature
+tests/steps/<modulo>.steps.ts
+tests/pages/<Modulo>Page.ts
+tests/fixtures/<modulo>/<modulo>Data.ts
+tests/utils/selectors/<modulo>Selectors.ts
+```
+
+Los selectores comunes de Odoo deben reutilizarse desde:
+
+- `tests/utils/selectors/commonSelectors.ts`
+- `tests/utils/selectors/odooCommonSelectors.ts`
+
+No agregar nuevos selectores en un archivo central unico. Cada modulo debe mantener sus selectores y datos en sus propios archivos para permitir commits y revisiones por bloque.
 
 ### Notas funcionales y acotaciones
 
@@ -65,6 +112,14 @@ npx cucumber-js tests/features/productos/productos.feature --tags "@lin-006"
 ```
 
 Antes de ejecutar contra Odoo, validar que las URLs de acciones y credenciales del entorno correspondan al usuario/rol requerido por cada escenario.
+
+Dry-run por scripts:
+
+```bash
+npm run test:contactos -- --dry-run
+npm run test:productos -- --dry-run
+npm run test:bienes -- --dry-run
+```
 
 ## Casos excluidos
 

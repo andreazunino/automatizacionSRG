@@ -1,4 +1,4 @@
-import { setDefaultTimeout, setWorldConstructor, World, type IWorldOptions } from '@cucumber/cucumber';
+﻿import { setDefaultTimeout, setWorldConstructor, World, type IWorldOptions } from '@cucumber/cucumber';
 import type { BrowserContext, Page } from '@playwright/test';
 import type {
   EmpresaBancoEspanaTestData,
@@ -8,22 +8,26 @@ import type {
   EmpresaIaeTestData,
   EmpresaInformeClienteTestData,
   MaestroContactosTestData,
-  NaturalezaT4TestData,
   EmpresaRegistroMercantilTestData,
   EmpresaRepresentanteTestData,
   PersonaFisicaDocumentoTestData,
   PersonaFisicaTestData,
-  ConceptoComisionHuerfanoTestData,
-  ConceptoComisionNoProtegidoTestData,
-  ProductoComisionTestData,
-  ProductoFinancieroTestData,
-  TipologiaProductoTestData,
   TipologiaContactosTestData,
   UnidadDecisionTestData
-} from '../fixtures/testData';
+} from '../fixtures/contactos/contactosData';
+import type {
+  ConceptoComisionHuerfanoTestData,
+  ConceptoComisionNoProtegidoTestData,
+  NaturalezaT4TestData,
+  ProductoComisionTestData,
+  ProductoFinancieroTestData,
+  TipologiaProductoTestData
+} from '../fixtures/productos/productosData';
+import type { TipoBienTestData } from '../fixtures/bienes/tipoBienData';
 import { ConfiguracionContactosPage } from '../pages/ConfiguracionContactosPage';
 import { ContactosPage } from '../pages/ContactosPage';
 import { LoginPage } from '../pages/LoginPage';
+import { BienesPage } from '../pages/BienesPage';
 import { ProductosPage } from '../pages/ProductosPage';
 
 export class CustomWorld extends World {
@@ -32,6 +36,7 @@ export class CustomWorld extends World {
   loginPage!: LoginPage;
   contactosPage!: ContactosPage;
   configuracionContactosPage!: ConfiguracionContactosPage;
+  bienesPage!: BienesPage;
   productosPage!: ProductosPage;
   currentPersonaFisica?: PersonaFisicaTestData;
   currentPersonaFisicaDocumento?: PersonaFisicaDocumentoTestData;
@@ -49,6 +54,7 @@ export class CustomWorld extends World {
   currentEmpresaInformeCliente?: EmpresaInformeClienteTestData;
   currentMaestroContactos?: MaestroContactosTestData;
   currentNaturalezaT4?: NaturalezaT4TestData;
+  currentTipoBien?: TipoBienTestData;
   currentEmpresaRegistroMercantil?: EmpresaRegistroMercantilTestData;
   currentEmpresaRepresentante?: EmpresaRepresentanteTestData;
   currentUnidadDecision?: UnidadDecisionTestData;
@@ -62,9 +68,12 @@ export class CustomWorld extends World {
     this.loginPage = new LoginPage(this.page);
     this.contactosPage = new ContactosPage(this.page);
     this.configuracionContactosPage = new ConfiguracionContactosPage(this.page);
+    this.bienesPage = new BienesPage(this.page);
     this.productosPage = new ProductosPage(this.page);
   }
 }
 
 setWorldConstructor(CustomWorld);
 setDefaultTimeout(60000);
+
+

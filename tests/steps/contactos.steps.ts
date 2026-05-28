@@ -16,7 +16,7 @@ import {
   createUnidadDecisionTestData,
   personaFisicaSinNombrePrimerApellido,
   personaFisicaSinPaisNacimiento
-} from '../fixtures/testData';
+} from '../fixtures/contactos/contactosData';
 import type { CustomWorld } from '../support/world';
 
 When('accedo al módulo Contactos', async function (this: CustomWorld) {
@@ -455,5 +455,6 @@ Then('debería documentar que no existe filtro visible por tipología en el list
   const note = await this.contactosPage.assertTipologiaFilterIsNotVisible(this.currentTipologiaContactos);
   await this.attach(note, 'text/plain');
 });
+
 
 

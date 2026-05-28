@@ -1,4 +1,4 @@
-import type { Locator, Page } from '@playwright/test';
+﻿import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 import type {
   ConceptoComisionHuerfanoTestData,
@@ -7,9 +7,14 @@ import type {
   ProductoComisionTestData,
   ProductoFinancieroTestData,
   TipologiaProductoTestData
-} from '../fixtures/testData';
+} from '../fixtures/productos/productosData';
 import { env } from '../support/env';
-import { selectors } from '../utils/selectors';
+import { commonSelectors } from '../utils/selectors/commonSelectors';
+import { conceptosComisionSelectors } from '../utils/selectors/conceptosComisionSelectors';
+import { naturalezaT4Selectors } from '../utils/selectors/naturalezaT4Selectors';
+import { productosSelectors } from '../utils/selectors/productosSelectors';
+import { productosComisionSelectors } from '../utils/selectors/productosComisionSelectors';
+import { tipologiasProductoSelectors } from '../utils/selectors/tipologiasProductoSelectors';
 import { BasePage } from './BasePage';
 
 export class ProductosPage extends BasePage {
@@ -28,13 +33,13 @@ export class ProductosPage extends BasePage {
   }
 
   async assertProductosPageIsVisible(): Promise<void> {
-    await expect(this.page).toHaveTitle(selectors.productos.pageTitleText);
-    await expect(this.page.locator(selectors.productos.newButton).first()).toBeVisible();
+    await expect(this.page).toHaveTitle(productosSelectors.pageTitleText);
+    await expect(this.page.locator(productosSelectors.newButton).first()).toBeVisible();
   }
 
   async assertProductosPageIsVisibleReadOnly(): Promise<void> {
-    await expect(this.page).toHaveTitle(selectors.productos.pageTitleText);
-    await expect(this.page.locator(selectors.productos.rows).first()).toBeVisible();
+    await expect(this.page).toHaveTitle(productosSelectors.pageTitleText);
+    await expect(this.page.locator(productosSelectors.rows).first()).toBeVisible();
   }
 
   async assertProductUserHasReadOnlyAccess(): Promise<void> {
@@ -47,19 +52,19 @@ export class ProductosPage extends BasePage {
 
   async assertProductManagerHasFullAccess(): Promise<void> {
     await this.navigateToProductos();
-    await expect(this.page.locator(selectors.productos.newButton).first()).toBeVisible();
+    await expect(this.page.locator(productosSelectors.newButton).first()).toBeVisible();
     await this.assertConfigurationMenuIsVisible();
   }
 
   async assertProductRoleConditionalUi(): Promise<void> {
     await this.navigateToProductos();
     await this.openFirstProductFromList();
-    await expect(this.page.getByRole('tab', { name: /L[ií]mites y [aá]mbito/i }).first()).toBeVisible();
+    await expect(this.page.getByRole('tab', { name: /L[iÃ­]mites y [aÃ¡]mbito/i }).first()).toBeVisible();
     await expect(this.page.getByRole('tab', { name: /Conceptos/i }).first()).toBeVisible();
     await this.assertStandardOdooGeneralInformationTabIsHidden();
     await this.navigateToProductosComisionReadOnly();
     await this.openFirstCommissionProductFromList();
-    await this.assertTabIsHidden(/L[ií]mites y [aá]mbito/i);
+    await this.assertTabIsHidden(/L[iÃ­]mites y [aÃ¡]mbito/i);
     await this.assertTabIsHidden(/Conceptos/i);
     await this.assertStandardOdooGeneralInformationTabIsHidden();
     await this.assertCommissionProductTypeIsReadonlyService();
@@ -72,17 +77,17 @@ export class ProductosPage extends BasePage {
 
   async navigateToProductosComisionReadOnly(): Promise<void> {
     await this.goto(env.commissionProductsUrl);
-    await expect(this.page).toHaveTitle(selectors.productosComision.pageTitleText);
-    await expect(this.page.locator(selectors.productos.rows).or(this.page.locator(selectors.productosComision.newButton)).first()).toBeVisible();
+    await expect(this.page).toHaveTitle(productosComisionSelectors.pageTitleText);
+    await expect(this.page.locator(productosSelectors.rows).or(this.page.locator(productosComisionSelectors.newButton)).first()).toBeVisible();
   }
 
   async assertProductosComisionPageIsVisible(): Promise<void> {
-    await expect(this.page).toHaveTitle(selectors.productosComision.pageTitleText);
-    await expect(this.page.locator(selectors.productosComision.newButton).first()).toBeVisible();
+    await expect(this.page).toHaveTitle(productosComisionSelectors.pageTitleText);
+    await expect(this.page.locator(productosComisionSelectors.newButton).first()).toBeVisible();
   }
 
   async createProductoComision(producto: ProductoComisionTestData): Promise<void> {
-    await this.click(selectors.productosComision.newButton);
+    await this.click(productosComisionSelectors.newButton);
     await this.fillProductoComisionName(producto.nombre);
     await this.assertProductoComisionPreloadedFields(producto);
     await this.saveCurrentCommissionProduct();
@@ -106,18 +111,18 @@ export class ProductosPage extends BasePage {
 
   async tryCreateOrphanCommissionConcept(concepto: ConceptoComisionHuerfanoTestData): Promise<boolean> {
     await this.goto(env.actionUrls.conceptosComision);
-    await expect(this.page.locator(selectors.conceptosComision.newButton).first()).toBeVisible();
-    await this.click(selectors.conceptosComision.newButton);
-    await this.fillConceptMasterField(selectors.conceptosComision.nameInput, concepto.nombre);
-    await this.fillConceptMasterField(selectors.conceptosComision.codeInput, concepto.codigo);
-    await this.click(selectors.conceptosComision.saveButton);
+    await expect(this.page.locator(conceptosComisionSelectors.newButton).first()).toBeVisible();
+    await this.click(conceptosComisionSelectors.newButton);
+    await this.fillConceptMasterField(conceptosComisionSelectors.nameInput, concepto.nombre);
+    await this.fillConceptMasterField(conceptosComisionSelectors.codeInput, concepto.codigo);
+    await this.click(conceptosComisionSelectors.saveButton);
 
     if (await this.hasOrphanCommissionConceptValidation()) {
       await this.closeCommissionConceptValidationDialogIfVisible();
       return true;
     }
 
-    await expect(this.page.locator(selectors.conceptosComision.saveButton).first()).toBeHidden({ timeout: 30000 });
+    await expect(this.page.locator(conceptosComisionSelectors.saveButton).first()).toBeHidden({ timeout: 30000 });
     return false;
   }
 
@@ -153,20 +158,20 @@ export class ProductosPage extends BasePage {
     rows: ConceptoComisionProtegido[]
   ): Promise<void> {
     await this.goto(env.actionUrls.conceptosComision);
-    await expect(this.page.locator(selectors.conceptosComision.rows).first()).toBeVisible();
+    await expect(this.page.locator(conceptosComisionSelectors.rows).first()).toBeVisible();
 
     for (const row of rows) {
       await this.openCommissionConcept(row.concepto);
       await this.enterCommissionConceptEditModeIfNeeded();
-      await this.assertCommissionConceptReadonlyField(selectors.conceptosComision.nameInput, 'Nombre', row.concepto);
+      await this.assertCommissionConceptReadonlyField(conceptosComisionSelectors.nameInput, 'Nombre', row.concepto);
 
       if (row.codigo) {
-        await this.assertCommissionConceptReadonlyField(selectors.conceptosComision.codeInput, 'Codigo', row.codigo);
+        await this.assertCommissionConceptReadonlyField(conceptosComisionSelectors.codeInput, 'Codigo', row.codigo);
       }
 
       await this.assertCommissionProductFieldIsEditable(row.concepto);
       await this.goto(env.actionUrls.conceptosComision);
-      await expect(this.page.locator(selectors.conceptosComision.rows).first()).toBeVisible();
+      await expect(this.page.locator(conceptosComisionSelectors.rows).first()).toBeVisible();
     }
   }
 
@@ -174,15 +179,15 @@ export class ProductosPage extends BasePage {
     concepto: ConceptoComisionNoProtegidoTestData
   ): Promise<void> {
     await this.goto(env.actionUrls.conceptosComision);
-    await expect(this.page.locator(selectors.conceptosComision.newButton).first()).toBeVisible();
-    await this.click(selectors.conceptosComision.newButton);
-    await this.fillConceptMasterField(selectors.conceptosComision.nameInput, concepto.nombre);
-    await this.fillConceptMasterField(selectors.conceptosComision.codeInput, concepto.codigo);
+    await expect(this.page.locator(conceptosComisionSelectors.newButton).first()).toBeVisible();
+    await this.click(conceptosComisionSelectors.newButton);
+    await this.fillConceptMasterField(conceptosComisionSelectors.nameInput, concepto.nombre);
+    await this.fillConceptMasterField(conceptosComisionSelectors.codeInput, concepto.codigo);
     await this.selectCommissionProductInConcept(concepto.productoComision);
     await this.saveCurrentCommissionConcept();
     await expect(this.page).toHaveTitle(new RegExp(this.escapeRegExp(concepto.nombre), 'i'));
     await this.enterCommissionConceptEditModeIfNeeded();
-    await this.fillConceptMasterField(selectors.conceptosComision.nameInput, concepto.nombreEditado);
+    await this.fillConceptMasterField(conceptosComisionSelectors.nameInput, concepto.nombreEditado);
     await this.saveCurrentCommissionConcept();
     await expect(this.page).toHaveTitle(new RegExp(this.escapeRegExp(concepto.nombreEditado), 'i'));
     await this.deleteCurrentCommissionConcept();
@@ -274,46 +279,46 @@ export class ProductosPage extends BasePage {
     await this.addCommissionConceptLine(producto);
     const row = this.page.locator('tr.o_selected_row, tr:has(input)').last();
 
-    await this.fillLineCombo(row, selectors.productos.conceptos.modoInput, 'Importe');
+    await this.fillLineCombo(row, productosSelectors.conceptos.modoInput, 'Importe');
     await this.assertLineAmountFieldsVisible(row);
     await this.assertLinePercentageFieldsHidden(row);
-    await this.fillLineCombo(row, selectors.productos.conceptos.modoInput, 'Porcentual');
+    await this.fillLineCombo(row, productosSelectors.conceptos.modoInput, 'Porcentual');
     await this.assertLinePercentageFieldsVisible(row);
     await this.assertLineAmountFieldsHidden(row);
-    await this.fillLineCombo(row, selectors.productos.conceptos.periodicidadInput, 'Al tirón');
+    await this.fillLineCombo(row, productosSelectors.conceptos.periodicidadInput, 'Al tirÃ³n');
     await this.assertLineDurationFieldsHidden(row);
   }
 
   async createProductoFinanciero(producto: ProductoFinancieroTestData): Promise<void> {
-    await this.click(selectors.productos.newButton);
+    await this.click(productosSelectors.newButton);
     await this.fillProductName(producto.nombre);
-    await this.selectConfiguredField('tipologia', selectors.productos.labels.tipologia, producto.tipologia);
-    await this.selectConfiguredField('control', selectors.productos.labels.control, producto.control);
-    await this.selectConfiguredField('grupoAsignar', selectors.productos.labels.grupoAsignar, producto.grupoAsignar);
-    await this.fillConfiguredField('reavalMinimo', selectors.productos.labels.reavalMinimo, producto.reavalMinimo);
-    await this.fillConfiguredField('reavalMaximo', selectors.productos.labels.reavalMaximo, producto.reavalMaximo);
-    await this.fillConfiguredField('importeMinimo', selectors.productos.labels.importeMinimo, producto.importeMinimo);
-    await this.fillConfiguredField('importeMaximo', selectors.productos.labels.importeMaximo, producto.importeMaximo);
+    await this.selectConfiguredField('tipologia', productosSelectors.labels.tipologia, producto.tipologia);
+    await this.selectConfiguredField('control', productosSelectors.labels.control, producto.control);
+    await this.selectConfiguredField('grupoAsignar', productosSelectors.labels.grupoAsignar, producto.grupoAsignar);
+    await this.fillConfiguredField('reavalMinimo', productosSelectors.labels.reavalMinimo, producto.reavalMinimo);
+    await this.fillConfiguredField('reavalMaximo', productosSelectors.labels.reavalMaximo, producto.reavalMaximo);
+    await this.fillConfiguredField('importeMinimo', productosSelectors.labels.importeMinimo, producto.importeMinimo);
+    await this.fillConfiguredField('importeMaximo', productosSelectors.labels.importeMaximo, producto.importeMaximo);
     await this.fillConfiguredField(
       'plazoMinimoMeses',
-      selectors.productos.labels.plazoMinimoMeses,
+      productosSelectors.labels.plazoMinimoMeses,
       producto.plazoMinimoMeses
     );
     await this.fillConfiguredField(
       'plazoMaximoMeses',
-      selectors.productos.labels.plazoMaximoMeses,
+      productosSelectors.labels.plazoMaximoMeses,
       producto.plazoMaximoMeses
     );
-    await this.fillConfiguredField('descuentoDias', selectors.productos.labels.descuentoDias, producto.descuentoDias);
-    await this.fillConfiguredField('interes', selectors.productos.labels.interes, producto.interesInicial);
+    await this.fillConfiguredField('descuentoDias', productosSelectors.labels.descuentoDias, producto.descuentoDias);
+    await this.fillConfiguredField('interes', productosSelectors.labels.interes, producto.interesInicial);
     await this.fillConfiguredField(
       'porcentajeCompartidoMinimo',
-      selectors.productos.labels.porcentajeCompartidoMinimo,
+      productosSelectors.labels.porcentajeCompartidoMinimo,
       producto.porcentajeCompartidoMinimo
     );
     await this.fillConfiguredField(
       'porcentajeCompartidoMaximo',
-      selectors.productos.labels.porcentajeCompartidoMaximo,
+      productosSelectors.labels.porcentajeCompartidoMaximo,
       producto.porcentajeCompartidoMaximo
     );
     await this.saveCurrentProduct();
@@ -322,11 +327,11 @@ export class ProductosPage extends BasePage {
 
   async updateInterestAndSave(producto: ProductoFinancieroTestData): Promise<void> {
     await this.enterEditModeIfNeeded();
-    await this.fillConfiguredField('interes', selectors.productos.labels.interes, producto.interesEditado);
+    await this.fillConfiguredField('interes', productosSelectors.labels.interes, producto.interesEditado);
     await this.saveCurrentProduct();
     await this.assertConfiguredFieldContainsValue(
       'interes',
-      selectors.productos.labels.interes,
+      productosSelectors.labels.interes,
       producto.interesEditado
     );
   }
@@ -360,19 +365,19 @@ export class ProductosPage extends BasePage {
   }
 
   async trySaveProductoWithoutName(): Promise<void> {
-    await this.click(selectors.productos.newButton);
+    await this.click(productosSelectors.newButton);
     await this.fillProductName('');
-    await this.fillConfiguredField('reavalMinimo', selectors.productos.labels.reavalMinimo, '0');
-    await this.fillConfiguredField('reavalMaximo', selectors.productos.labels.reavalMaximo, '0');
+    await this.fillConfiguredField('reavalMinimo', productosSelectors.labels.reavalMinimo, '0');
+    await this.fillConfiguredField('reavalMaximo', productosSelectors.labels.reavalMaximo, '0');
     await this.clickSaveExpectingValidation();
   }
 
   async assertNameRequiredValidationAndProductWasNotSaved(): Promise<void> {
-    const nameInput = this.page.locator(selectors.productos.nameInput).first();
+    const nameInput = this.page.locator(productosSelectors.nameInput).first();
 
     await expect(nameInput).toBeVisible();
     await expect(nameInput).toHaveValue('');
-    await expect(this.page.locator(selectors.productos.saveButton).first()).toBeVisible();
+    await expect(this.page.locator(productosSelectors.saveButton).first()).toBeVisible();
     await expect
       .poll(async () => this.hasNameRequiredValidation(), {
         message: 'Esperaba una validacion de Nombre obligatorio.'
@@ -426,7 +431,7 @@ export class ProductosPage extends BasePage {
 
   async assertProductRemainsSaved(producto: ProductoFinancieroTestData): Promise<void> {
     await expect(this.page).toHaveTitle(new RegExp(this.escapeRegExp(producto.nombre), 'i'));
-    await expect(this.page.locator(selectors.productos.saveButton).first()).toBeHidden();
+    await expect(this.page.locator(productosSelectors.saveButton).first()).toBeHidden();
   }
 
   async validatePercentageAndCoherenceCases(rows: ProductoValidacionRango[]): Promise<void> {
@@ -454,12 +459,12 @@ export class ProductosPage extends BasePage {
     await this.openInformacionGeneralTabIfVisible();
     await this.fillConfiguredField(
       'fechaInicioComercializacion',
-      selectors.productos.labels.fechaInicioComercializacion,
+      productosSelectors.labels.fechaInicioComercializacion,
       this.relativeSpanishDate({ months: 0 })
     );
     await this.fillConfiguredField(
       'fechaFinComercializacion',
-      selectors.productos.labels.fechaFinComercializacion,
+      productosSelectors.labels.fechaFinComercializacion,
       this.relativeSpanishDate({ months: -1 })
     );
     await this.clickSaveExpectingValidation();
@@ -478,12 +483,12 @@ export class ProductosPage extends BasePage {
     await this.openOtraInformacionTabIfVisible();
     await this.fillConfiguredField(
       'fechaAltaFicha',
-      selectors.productos.labels.fechaAltaFicha,
+      productosSelectors.labels.fechaAltaFicha,
       this.relativeSpanishDate({ months: 0 })
     );
     await this.fillConfiguredField(
       'fechaBajaFicha',
-      selectors.productos.labels.fechaBajaFicha,
+      productosSelectors.labels.fechaBajaFicha,
       this.relativeSpanishDate({ months: -1 })
     );
     await this.clickSaveExpectingValidation();
@@ -499,10 +504,10 @@ export class ProductosPage extends BasePage {
 
   async configureFixedReceiverAsFinancialEntity(producto: ProductoFinancieroTestData): Promise<void> {
     await this.enterEditModeIfNeeded();
-    await this.selectConfiguredField('receptorFijo', selectors.productos.labels.receptorFijo, producto.receptorFijo);
+    await this.selectConfiguredField('receptorFijo', productosSelectors.labels.receptorFijo, producto.receptorFijo);
     await this.selectConfiguredField(
       'entidadFinanciera',
-      selectors.productos.labels.entidadFinanciera,
+      productosSelectors.labels.entidadFinanciera,
       producto.entidadFinanciera
     );
     await this.saveCurrentProduct();
@@ -510,17 +515,17 @@ export class ProductosPage extends BasePage {
 
   async assertFixedReceiverCalculatedFields(producto: ProductoFinancieroTestData): Promise<void> {
     await expect
-      .poll(async () => this.booleanFieldValue('tieneReceptorFijo', selectors.productos.labels.tieneReceptorFijo), {
+      .poll(async () => this.booleanFieldValue('tieneReceptorFijo', productosSelectors.labels.tieneReceptorFijo), {
         message: 'Esperaba que Tiene receptor fijo sea verdadero.'
       })
       .toBeTruthy();
     await expect
-      .poll(async () => this.fieldTextValue('tipoReceptorFijo', selectors.productos.labels.tipoReceptorFijo), {
+      .poll(async () => this.fieldTextValue('tipoReceptorFijo', productosSelectors.labels.tipoReceptorFijo), {
         message: 'Esperaba que Tipo receptor fijo sea Entidad financiera.'
       })
       .toMatch(new RegExp(this.escapeRegExp(producto.receptorFijo), 'i'));
 
-    const contactoReceptor = this.page.locator(selectors.productos.fields.contactoReceptor).first();
+    const contactoReceptor = this.page.locator(productosSelectors.fields.contactoReceptor).first();
 
     if (await contactoReceptor.count()) {
       await expect(contactoReceptor).toBeHidden();
@@ -531,12 +536,12 @@ export class ProductosPage extends BasePage {
     await this.enterEditModeIfNeeded();
     await this.selectConfiguredField(
       'receptorFijo',
-      selectors.productos.labels.receptorFijo,
+      productosSelectors.labels.receptorFijo,
       producto.receptorFijoContacto
     );
     await this.selectConfiguredField(
       'contactoReceptor',
-      selectors.productos.labels.contactoReceptor,
+      productosSelectors.labels.contactoReceptor,
       producto.contactoReceptor
     );
     await this.saveCurrentProduct();
@@ -544,17 +549,17 @@ export class ProductosPage extends BasePage {
 
   async assertFixedReceiverContactCalculatedFields(producto: ProductoFinancieroTestData): Promise<void> {
     await expect
-      .poll(async () => this.booleanFieldValue('tieneReceptorFijo', selectors.productos.labels.tieneReceptorFijo), {
+      .poll(async () => this.booleanFieldValue('tieneReceptorFijo', productosSelectors.labels.tieneReceptorFijo), {
         message: 'Esperaba que Tiene receptor fijo sea verdadero.'
       })
       .toBeTruthy();
     await expect
-      .poll(async () => this.fieldTextValue('tipoReceptorFijo', selectors.productos.labels.tipoReceptorFijo), {
+      .poll(async () => this.fieldTextValue('tipoReceptorFijo', productosSelectors.labels.tipoReceptorFijo), {
         message: 'Esperaba que Tipo receptor fijo sea Contacto.'
       })
       .toMatch(new RegExp(this.escapeRegExp(producto.receptorFijoContacto), 'i'));
 
-    const entidadFinanciera = this.page.locator(selectors.productos.fields.entidadFinanciera).first();
+    const entidadFinanciera = this.page.locator(productosSelectors.fields.entidadFinanciera).first();
 
     if (await entidadFinanciera.count()) {
       await expect(entidadFinanciera).toBeHidden();
@@ -595,10 +600,10 @@ export class ProductosPage extends BasePage {
       (expectedOption) => !options.some((option) => this.normalizeText(option).includes(this.normalizeText(expectedOption)))
     );
 
-    await this.selectConfiguredField('control', selectors.productos.labels.control, producto.control);
+    await this.selectConfiguredField('control', productosSelectors.labels.control, producto.control);
     await this.saveCurrentProduct();
     await this.enterEditModeIfNeeded();
-    await this.selectConfiguredField('control', selectors.productos.labels.control, producto.controlAlternativo);
+    await this.selectConfiguredField('control', productosSelectors.labels.control, producto.controlAlternativo);
     await this.saveCurrentProduct();
 
     if (missingOptions.length === 0) {
@@ -612,17 +617,17 @@ export class ProductosPage extends BasePage {
     await this.enterEditModeIfNeeded();
     await this.openInformacionGeneralTabIfVisible();
     await this.assertClienteObjetivoFieldsAreVisible();
-    await this.setCheckboxField(selectors.productos.clienteObjetivo.tipoJuridico, false);
+    await this.setCheckboxField(productosSelectors.clienteObjetivo.tipoJuridico, false);
     await this.saveCurrentProduct();
     await this.enterEditModeIfNeeded();
-    await expect(this.checkboxField(selectors.productos.clienteObjetivo.tipoJuridico)).not.toBeChecked();
+    await expect(this.checkboxField(productosSelectors.clienteObjetivo.tipoJuridico)).not.toBeChecked();
     await this.setAllCompanySizeTargetCheckboxes(false);
     await this.saveCurrentProduct();
     await this.enterEditModeIfNeeded();
     await this.assertAllCompanySizeTargetCheckboxes(false);
-    await this.setCheckboxField(selectors.productos.clienteObjetivo.tipoJuridico, true);
-    await this.setCheckboxField(selectors.productos.clienteObjetivo.autonomoTipoFisico, true);
-    await this.setCheckboxField(selectors.productos.clienteObjetivo.emprendedoresNuevaEmpresa, true);
+    await this.setCheckboxField(productosSelectors.clienteObjetivo.tipoJuridico, true);
+    await this.setCheckboxField(productosSelectors.clienteObjetivo.autonomoTipoFisico, true);
+    await this.setCheckboxField(productosSelectors.clienteObjetivo.emprendedoresNuevaEmpresa, true);
     await this.setAllCompanySizeTargetCheckboxes(true);
     await this.saveCurrentProduct();
   }
@@ -632,7 +637,7 @@ export class ProductosPage extends BasePage {
     await this.openOtraInformacionTabIfVisible();
 
     const expectedOptions = rows.map((row) => row.opcion);
-    const actualOptions = await this.selectionOptions('capitalAfecto', selectors.productos.labels.capitalAfecto);
+    const actualOptions = await this.selectionOptions('capitalAfecto', productosSelectors.labels.capitalAfecto);
     const missingOptions = expectedOptions.filter(
       (expectedOption) => !actualOptions.some((actualOption) => this.normalizeText(actualOption).includes(this.normalizeText(expectedOption)))
     );
@@ -646,7 +651,7 @@ export class ProductosPage extends BasePage {
     for (const row of rows) {
       await this.enterEditModeIfNeeded();
       await this.openOtraInformacionTabIfVisible();
-      await this.selectConfiguredField('capitalAfecto', selectors.productos.labels.capitalAfecto, row.opcion);
+      await this.selectConfiguredField('capitalAfecto', productosSelectors.labels.capitalAfecto, row.opcion);
       await this.saveCurrentProduct();
     }
   }
@@ -702,14 +707,14 @@ export class ProductosPage extends BasePage {
   }
 
   private async fillProductName(name: string): Promise<void> {
-    const input = this.page.locator(selectors.productos.nameInput).first();
+    const input = this.page.locator(productosSelectors.nameInput).first();
 
     await expect(input).toBeVisible();
     await input.fill(name);
   }
 
   private async assertCreateProductIsNotAvailable(): Promise<void> {
-    const newButton = this.page.locator(selectors.productos.newButton).first();
+    const newButton = this.page.locator(productosSelectors.newButton).first();
 
     if (await newButton.isVisible().catch(() => false)) {
       await expect(newButton).toBeDisabled();
@@ -720,19 +725,19 @@ export class ProductosPage extends BasePage {
   }
 
   private async openFirstProductFromList(): Promise<void> {
-    const row = this.page.locator(selectors.productos.rows).first();
+    const row = this.page.locator(productosSelectors.rows).first();
 
     await expect(row).toBeVisible();
     await row.click();
-    await expect(this.page.locator(selectors.productos.rows).first()).toBeHidden({ timeout: 30000 });
+    await expect(this.page.locator(productosSelectors.rows).first()).toBeHidden({ timeout: 30000 });
   }
 
   private async openFirstCommissionProductFromList(): Promise<void> {
-    const row = this.page.locator(selectors.productos.rows).first();
+    const row = this.page.locator(productosSelectors.rows).first();
 
     await expect(row).toBeVisible();
     await row.click();
-    await expect(this.page.locator(selectors.productos.rows).first()).toBeHidden({ timeout: 30000 });
+    await expect(this.page.locator(productosSelectors.rows).first()).toBeHidden({ timeout: 30000 });
   }
 
   private async assertTabIsHidden(tabName: RegExp): Promise<void> {
@@ -745,7 +750,7 @@ export class ProductosPage extends BasePage {
 
   private async assertStandardOdooGeneralInformationTabIsHidden(): Promise<void> {
     const standardTab = this.page
-      .getByRole('tab', { name: /Informaci[oó]n general/i })
+      .getByRole('tab', { name: /Informaci[oÃ³]n general/i })
       .filter({ hasNotText: /Producto|Financier/i })
       .first();
 
@@ -759,7 +764,7 @@ export class ProductosPage extends BasePage {
 
     expect(typeValue).toMatch(/Servicio/i);
 
-    const input = this.page.locator(selectors.productosComision.fields.tipo).first();
+    const input = this.page.locator(productosComisionSelectors.fields.tipo).first();
 
     if (await input.isVisible().catch(() => false)) {
       const isReadonly = await input.evaluate((element) => {
@@ -773,8 +778,8 @@ export class ProductosPage extends BasePage {
   }
 
   private async assertEditProductIsNotAvailable(): Promise<void> {
-    const editButton = this.page.locator(selectors.productos.editButton).first();
-    const saveButton = this.page.locator(selectors.productos.saveButton).first();
+    const editButton = this.page.locator(productosSelectors.editButton).first();
+    const saveButton = this.page.locator(productosSelectors.saveButton).first();
 
     if (await editButton.isVisible().catch(() => false)) {
       await expect(editButton).toBeDisabled();
@@ -788,7 +793,7 @@ export class ProductosPage extends BasePage {
   private async assertConfigurationMenuIsNotVisible(): Promise<void> {
     const configurationMenu = this.page
       .locator('a, button, [role="menuitem"]')
-      .filter({ hasText: /^Configuraci[oó]n$/ })
+      .filter({ hasText: /^Configuraci[oÃ³]n$/ })
       .first();
 
     await expect(configurationMenu).toBeHidden();
@@ -797,14 +802,14 @@ export class ProductosPage extends BasePage {
   private async assertConfigurationMenuIsVisible(): Promise<void> {
     const configurationMenu = this.page
       .locator('a, button, [role="menuitem"]')
-      .filter({ hasText: /^Configuraci[oó]n$/ })
+      .filter({ hasText: /^Configuraci[oÃ³]n$/ })
       .first();
 
     await expect(configurationMenu).toBeVisible();
   }
 
   private async fillProductoComisionName(name: string): Promise<void> {
-    const input = this.page.locator(selectors.productosComision.nameInput).first();
+    const input = this.page.locator(productosComisionSelectors.nameInput).first();
 
     await expect(input).toBeVisible();
     await input.fill(name);
@@ -819,7 +824,7 @@ export class ProductosPage extends BasePage {
   }
 
   private async openCommissionConcept(name: string): Promise<void> {
-    const searchInput = this.page.locator(selectors.conceptosComision.searchInput).first();
+    const searchInput = this.page.locator(conceptosComisionSelectors.searchInput).first();
 
     await expect(searchInput).toBeVisible();
     await searchInput.fill(name);
@@ -832,20 +837,20 @@ export class ProductosPage extends BasePage {
       await this.page.keyboard.press('Enter');
     }
 
-    const row = this.page.locator(selectors.conceptosComision.rows).filter({ hasText: name }).first();
+    const row = this.page.locator(conceptosComisionSelectors.rows).filter({ hasText: name }).first();
 
     await expect(row).toBeVisible();
     await row.click();
   }
 
   private async enterCommissionConceptEditModeIfNeeded(): Promise<void> {
-    const saveButton = this.page.locator(selectors.conceptosComision.saveButton).first();
+    const saveButton = this.page.locator(conceptosComisionSelectors.saveButton).first();
 
     if (await saveButton.isVisible().catch(() => false)) {
       return;
     }
 
-    const editButton = this.page.locator(selectors.conceptosComision.editButton).first();
+    const editButton = this.page.locator(conceptosComisionSelectors.editButton).first();
 
     await expect(editButton).toBeVisible();
     await editButton.click();
@@ -876,7 +881,7 @@ export class ProductosPage extends BasePage {
   }
 
   private async assertCommissionProductFieldIsEditable(conceptName: string): Promise<void> {
-    const input = this.page.locator(selectors.conceptosComision.productoComisionInput).first();
+    const input = this.page.locator(conceptosComisionSelectors.productoComisionInput).first();
 
     await expect(input, `Producto de comision debe estar visible para ${conceptName}`).toBeVisible();
     const isEditable = await input.evaluate((element) => {
@@ -889,7 +894,7 @@ export class ProductosPage extends BasePage {
   }
 
   private async selectCommissionProductInConcept(productName: string): Promise<void> {
-    const input = this.page.locator(selectors.conceptosComision.productoComisionInput).first();
+    const input = this.page.locator(conceptosComisionSelectors.productoComisionInput).first();
 
     await expect(input).toBeVisible();
     await input.fill(productName);
@@ -897,7 +902,7 @@ export class ProductosPage extends BasePage {
   }
 
   private async saveCurrentCommissionConcept(): Promise<void> {
-    const saveButton = this.page.locator(selectors.conceptosComision.saveButton).first();
+    const saveButton = this.page.locator(conceptosComisionSelectors.saveButton).first();
 
     await expect(saveButton).toBeVisible();
     await saveButton.click();
@@ -905,13 +910,13 @@ export class ProductosPage extends BasePage {
   }
 
   private async deleteCurrentCommissionConcept(): Promise<void> {
-    const actionButton = this.page.locator(selectors.conceptosComision.actionButton).first();
+    const actionButton = this.page.locator(conceptosComisionSelectors.actionButton).first();
 
     await expect(actionButton).toBeVisible();
     await actionButton.click();
-    await this.page.locator(selectors.conceptosComision.deleteMenuItem).first().click();
+    await this.page.locator(conceptosComisionSelectors.deleteMenuItem).first().click();
 
-    const confirmButton = this.page.locator(selectors.conceptosComision.confirmDeleteButton).last();
+    const confirmButton = this.page.locator(conceptosComisionSelectors.confirmDeleteButton).last();
 
     if (await confirmButton.isVisible().catch(() => false)) {
       await confirmButton.click();
@@ -920,21 +925,21 @@ export class ProductosPage extends BasePage {
 
   private async assertCommissionConceptDoesNotExist(name: string): Promise<void> {
     await this.goto(env.actionUrls.conceptosComision);
-    const searchInput = this.page.locator(selectors.conceptosComision.searchInput).first();
+    const searchInput = this.page.locator(conceptosComisionSelectors.searchInput).first();
 
     await expect(searchInput).toBeVisible();
     await searchInput.fill(name);
     await this.page.keyboard.press('Enter');
-    await expect(this.page.locator(selectors.conceptosComision.rows).filter({ hasText: name })).toHaveCount(0);
+    await expect(this.page.locator(conceptosComisionSelectors.rows).filter({ hasText: name })).toHaveCount(0);
   }
 
   private async navigateToProductTypologies(): Promise<void> {
     await this.goto(env.actionUrls.tipologiasProducto);
-    await expect(this.page.locator(selectors.tipologiasProducto.newButton).first()).toBeVisible();
+    await expect(this.page.locator(tipologiasProductoSelectors.newButton).first()).toBeVisible();
   }
 
   private async createProductTypology(name: string): Promise<void> {
-    await this.click(selectors.tipologiasProducto.newButton);
+    await this.click(tipologiasProductoSelectors.newButton);
     await this.fillProductTypologyName(name);
     await this.saveCurrentProductTypology();
     await expect(this.page).toHaveTitle(new RegExp(this.escapeRegExp(name), 'i'));
@@ -942,20 +947,20 @@ export class ProductosPage extends BasePage {
 
   private async tryCreateDuplicatedProductTypology(name: string): Promise<void> {
     await this.navigateToProductTypologies();
-    await this.click(selectors.tipologiasProducto.newButton);
+    await this.click(tipologiasProductoSelectors.newButton);
     await this.fillProductTypologyName(name);
-    await this.page.locator(selectors.tipologiasProducto.saveButton).first().click();
+    await this.page.locator(tipologiasProductoSelectors.saveButton).first().click();
   }
 
   private async assertProductTypologyDuplicateValidation(): Promise<void> {
     await expect
       .poll(async () => {
         const text = [
-          ...(await this.page.locator(selectors.tipologiasProducto.validationText).allTextContents()),
+          ...(await this.page.locator(tipologiasProductoSelectors.validationText).allTextContents()),
           (await this.page.locator('body').textContent()) ?? ''
         ].join(' ');
 
-        return /duplic|ya existe|[uú]nico|unique|Tipolog/i.test(text);
+        return /duplic|ya existe|[uÃº]nico|unique|Tipolog/i.test(text);
       })
       .toBeTruthy();
     await this.closeProductTypologyDialogIfVisible();
@@ -963,28 +968,28 @@ export class ProductosPage extends BasePage {
 
   private async openProductTypology(name: string): Promise<void> {
     await this.navigateToProductTypologies();
-    await this.searchInCurrentList(selectors.tipologiasProducto.searchInput, name);
-    const row = this.page.locator(selectors.tipologiasProducto.rows).filter({ hasText: name }).first();
+    await this.searchInCurrentList(tipologiasProductoSelectors.searchInput, name);
+    const row = this.page.locator(tipologiasProductoSelectors.rows).filter({ hasText: name }).first();
 
     await expect(row).toBeVisible();
     await row.click();
   }
 
   private async enterProductTypologyEditModeIfNeeded(): Promise<void> {
-    const saveButton = this.page.locator(selectors.tipologiasProducto.saveButton).first();
+    const saveButton = this.page.locator(tipologiasProductoSelectors.saveButton).first();
 
     if (await saveButton.isVisible().catch(() => false)) {
       return;
     }
 
-    const editButton = this.page.locator(selectors.tipologiasProducto.editButton).first();
+    const editButton = this.page.locator(tipologiasProductoSelectors.editButton).first();
 
     await expect(editButton).toBeVisible();
     await editButton.click();
   }
 
   private async fillProductTypologyName(name: string): Promise<void> {
-    const input = this.page.locator(selectors.tipologiasProducto.nameInput).first();
+    const input = this.page.locator(tipologiasProductoSelectors.nameInput).first();
 
     await expect(input).toBeVisible();
     await input.fill(name);
@@ -992,7 +997,7 @@ export class ProductosPage extends BasePage {
   }
 
   private async saveCurrentProductTypology(): Promise<void> {
-    const saveButton = this.page.locator(selectors.tipologiasProducto.saveButton).first();
+    const saveButton = this.page.locator(tipologiasProductoSelectors.saveButton).first();
 
     await expect(saveButton).toBeVisible();
     await saveButton.click();
@@ -1000,13 +1005,13 @@ export class ProductosPage extends BasePage {
   }
 
   private async archiveCurrentProductTypology(): Promise<void> {
-    const actionButton = this.page.locator(selectors.tipologiasProducto.actionButton).first();
+    const actionButton = this.page.locator(tipologiasProductoSelectors.actionButton).first();
 
     await expect(actionButton).toBeVisible();
     await actionButton.click();
-    await this.page.locator(selectors.tipologiasProducto.archiveMenuItem).first().click();
+    await this.page.locator(tipologiasProductoSelectors.archiveMenuItem).first().click();
 
-    const confirmButton = this.page.locator(selectors.tipologiasProducto.confirmArchiveButton).last();
+    const confirmButton = this.page.locator(tipologiasProductoSelectors.confirmArchiveButton).last();
 
     if (await confirmButton.isVisible().catch(() => false)) {
       await confirmButton.click();
@@ -1015,12 +1020,12 @@ export class ProductosPage extends BasePage {
 
   private async assertProductTypologyIsNotVisibleInActiveList(name: string): Promise<void> {
     await this.navigateToProductTypologies();
-    await this.searchInCurrentList(selectors.tipologiasProducto.searchInput, name);
-    await expect(this.page.locator(selectors.tipologiasProducto.rows).filter({ hasText: name })).toHaveCount(0);
+    await this.searchInCurrentList(tipologiasProductoSelectors.searchInput, name);
+    await expect(this.page.locator(tipologiasProductoSelectors.rows).filter({ hasText: name })).toHaveCount(0);
   }
 
   private async assertProductTypologyIsNotVisibleInFilters(name: string): Promise<void> {
-    const filterButton = this.page.locator(selectors.tipologiasProducto.listFilterButton).first();
+    const filterButton = this.page.locator(tipologiasProductoSelectors.listFilterButton).first();
 
     if (!(await filterButton.isVisible().catch(() => false))) {
       return;
@@ -1050,7 +1055,7 @@ export class ProductosPage extends BasePage {
   }
 
   private async closeProductTypologyDialogIfVisible(): Promise<void> {
-    const closeButton = this.page.locator(selectors.tipologiasProducto.dialogCloseButton).first();
+    const closeButton = this.page.locator(tipologiasProductoSelectors.dialogCloseButton).first();
 
     if (await closeButton.isVisible().catch(() => false)) {
       await closeButton.click();
@@ -1069,11 +1074,11 @@ export class ProductosPage extends BasePage {
 
   private async navigateToNaturalezaT4(): Promise<void> {
     await this.goto(env.actionUrls.naturalezaT4);
-    await expect(this.page.locator(selectors.naturalezaT4.newButton).first()).toBeVisible();
+    await expect(this.page.locator(naturalezaT4Selectors.newButton).first()).toBeVisible();
   }
 
   private async createNaturalezaT4(data: NaturalezaT4TestData): Promise<void> {
-    await this.click(selectors.naturalezaT4.newButton);
+    await this.click(naturalezaT4Selectors.newButton);
     await this.fillNaturalezaT4Code(data.codigo);
     await this.fillNaturalezaT4Description(data.descripcion);
     await this.saveCurrentNaturalezaT4();
@@ -1081,20 +1086,20 @@ export class ProductosPage extends BasePage {
   }
 
   private async enterNaturalezaT4EditModeIfNeeded(): Promise<void> {
-    const saveButton = this.page.locator(selectors.naturalezaT4.saveButton).first();
+    const saveButton = this.page.locator(naturalezaT4Selectors.saveButton).first();
 
     if (await saveButton.isVisible().catch(() => false)) {
       return;
     }
 
-    const editButton = this.page.locator(selectors.naturalezaT4.editButton).first();
+    const editButton = this.page.locator(naturalezaT4Selectors.editButton).first();
 
     await expect(editButton).toBeVisible();
     await editButton.click();
   }
 
   private async fillNaturalezaT4Code(code: string): Promise<void> {
-    const input = this.page.locator(selectors.naturalezaT4.codeInput).first();
+    const input = this.page.locator(naturalezaT4Selectors.codeInput).first();
 
     await expect(input).toBeVisible();
     await input.fill(code);
@@ -1102,14 +1107,14 @@ export class ProductosPage extends BasePage {
   }
 
   private async fillNaturalezaT4Description(description: string): Promise<void> {
-    const input = this.page.locator(selectors.naturalezaT4.descriptionInput).first();
+    const input = this.page.locator(naturalezaT4Selectors.descriptionInput).first();
 
     await expect(input).toBeVisible();
     await input.fill(description);
   }
 
   private async saveCurrentNaturalezaT4(): Promise<void> {
-    const saveButton = this.page.locator(selectors.naturalezaT4.saveButton).first();
+    const saveButton = this.page.locator(naturalezaT4Selectors.saveButton).first();
 
     await expect(saveButton).toBeVisible();
     await saveButton.click();
@@ -1117,13 +1122,13 @@ export class ProductosPage extends BasePage {
   }
 
   private async archiveCurrentNaturalezaT4(): Promise<void> {
-    const actionButton = this.page.locator(selectors.naturalezaT4.actionButton).first();
+    const actionButton = this.page.locator(naturalezaT4Selectors.actionButton).first();
 
     await expect(actionButton).toBeVisible();
     await actionButton.click();
-    await this.page.locator(selectors.naturalezaT4.archiveMenuItem).first().click();
+    await this.page.locator(naturalezaT4Selectors.archiveMenuItem).first().click();
 
-    const confirmButton = this.page.locator(selectors.naturalezaT4.confirmArchiveButton).last();
+    const confirmButton = this.page.locator(naturalezaT4Selectors.confirmArchiveButton).last();
 
     if (await confirmButton.isVisible().catch(() => false)) {
       await confirmButton.click();
@@ -1132,22 +1137,22 @@ export class ProductosPage extends BasePage {
 
   private async assertNaturalezaT4IsNotVisibleInActiveList(description: string): Promise<void> {
     await this.navigateToNaturalezaT4();
-    await this.searchInCurrentList(selectors.naturalezaT4.searchInput, description);
-    await expect(this.page.locator(selectors.naturalezaT4.rows).filter({ hasText: description })).toHaveCount(0);
+    await this.searchInCurrentList(naturalezaT4Selectors.searchInput, description);
+    await expect(this.page.locator(naturalezaT4Selectors.rows).filter({ hasText: description })).toHaveCount(0);
   }
 
   private async assertNaturalezaT4IsNotAvailableInProductGroup(description: string): Promise<void> {
     await this.goto(env.actionUrls.gruposProducto);
-    await expect(this.page.locator(selectors.naturalezaT4.newButton).first()).toBeVisible();
-    await this.click(selectors.naturalezaT4.newButton);
+    await expect(this.page.locator(naturalezaT4Selectors.newButton).first()).toBeVisible();
+    await this.click(naturalezaT4Selectors.newButton);
 
-    const input = this.page.locator(selectors.naturalezaT4.grupoProductoNaturalezaT4Input).first();
+    const input = this.page.locator(naturalezaT4Selectors.grupoProductoNaturalezaT4Input).first();
 
     await expect(input).toBeVisible();
     await input.fill(description);
 
     const option = this.page
-      .locator(selectors.naturalezaT4.autocompleteOption)
+      .locator(naturalezaT4Selectors.autocompleteOption)
       .filter({ hasText: new RegExp(this.escapeRegExp(description), 'i') })
       .filter({ hasNotText: /Crear|Buscar/i })
       .first();
@@ -1165,7 +1170,7 @@ export class ProductosPage extends BasePage {
   }
 
   private async fillConfiguredField(
-    field: keyof typeof selectors.productos.fields,
+    field: keyof typeof productosSelectors.fields,
     label: string,
     value: string
   ): Promise<void> {
@@ -1179,7 +1184,7 @@ export class ProductosPage extends BasePage {
   }
 
   private async selectConfiguredField(
-    field: keyof typeof selectors.productos.fields,
+    field: keyof typeof productosSelectors.fields,
     label: string,
     value: string
   ): Promise<void> {
@@ -1201,17 +1206,17 @@ export class ProductosPage extends BasePage {
   }
 
   private async controlOptions(): Promise<string[]> {
-    return this.selectionOptions('control', selectors.productos.labels.control);
+    return this.selectionOptions('control', productosSelectors.labels.control);
   }
 
-  private async selectionOptions(field: keyof typeof selectors.productos.fields, label: string): Promise<string[]> {
+  private async selectionOptions(field: keyof typeof productosSelectors.fields, label: string): Promise<string[]> {
     const input = await this.inputForField(field, label);
 
     await input.click();
     await input.fill('');
 
     const optionLocator = this.page
-      .locator(selectors.productos.autocompleteOption)
+      .locator(productosSelectors.autocompleteOption)
       .filter({ hasNotText: /Crear|Buscar/i });
 
     await expect(optionLocator.first()).toBeVisible();
@@ -1226,7 +1231,7 @@ export class ProductosPage extends BasePage {
   }
 
   private async assertConfiguredFieldContainsValue(
-    field: keyof typeof selectors.productos.fields,
+    field: keyof typeof productosSelectors.fields,
     label: string,
     expectedValue: string
   ): Promise<void> {
@@ -1238,10 +1243,10 @@ export class ProductosPage extends BasePage {
   }
 
   private async inputForField(
-    field: keyof typeof selectors.productos.fields,
+    field: keyof typeof productosSelectors.fields,
     label: string
   ): Promise<Locator> {
-    const configuredInput = this.page.locator(selectors.productos.fields[field]).first();
+    const configuredInput = this.page.locator(productosSelectors.fields[field]).first();
 
     if (await configuredInput.isVisible().catch(() => false)) {
       return configuredInput;
@@ -1267,38 +1272,38 @@ export class ProductosPage extends BasePage {
 
   private async performArchiveCurrentProduct(): Promise<void> {
     await this.openActionMenuIfAvailable();
-    await this.page.locator(selectors.productos.archiveMenuItem).filter({ hasText: /^Archivar$/ }).first().click();
+    await this.page.locator(productosSelectors.archiveMenuItem).filter({ hasText: /^Archivar$/ }).first().click();
 
-    const confirmButton = this.page.locator(selectors.productos.confirmArchiveButton).last();
+    const confirmButton = this.page.locator(productosSelectors.confirmArchiveButton).last();
 
     if (await confirmButton.isVisible().catch(() => false)) {
       await confirmButton.click();
     }
 
-    await expect(this.page.locator(selectors.productos.unarchiveButton).first()).toBeVisible({ timeout: 30000 });
+    await expect(this.page.locator(productosSelectors.unarchiveButton).first()).toBeVisible({ timeout: 30000 });
   }
 
   private async performReactivateCurrentProduct(): Promise<void> {
-    const directButton = this.page.locator(selectors.productos.unarchiveButton).first();
+    const directButton = this.page.locator(productosSelectors.unarchiveButton).first();
 
     if (await directButton.isVisible().catch(() => false)) {
       await directButton.click();
     } else {
       await this.openActionMenuIfAvailable();
-      await this.page.locator(selectors.productos.unarchiveButton).first().click();
+      await this.page.locator(productosSelectors.unarchiveButton).first().click();
     }
 
-    await expect(this.page.locator(selectors.productos.unarchiveButton).first()).toBeHidden({ timeout: 30000 });
+    await expect(this.page.locator(productosSelectors.unarchiveButton).first()).toBeHidden({ timeout: 30000 });
   }
 
   private async performDuplicateCurrentProduct(): Promise<void> {
     await this.openActionMenuIfAvailable();
-    await this.page.locator(selectors.productos.duplicateMenuItem).first().click();
-    await expect(this.page.locator(selectors.productos.saveButton).first()).toBeVisible({ timeout: 30000 });
+    await this.page.locator(productosSelectors.duplicateMenuItem).first().click();
+    await expect(this.page.locator(productosSelectors.saveButton).first()).toBeVisible({ timeout: 30000 });
   }
 
   private async openActionMenuIfAvailable(): Promise<void> {
-    const actionButton = this.page.locator(selectors.productos.actionButton).first();
+    const actionButton = this.page.locator(productosSelectors.actionButton).first();
 
     if (await actionButton.isVisible().catch(() => false)) {
       await actionButton.click();
@@ -1306,13 +1311,13 @@ export class ProductosPage extends BasePage {
   }
 
   private async fechaBajaValue(): Promise<string> {
-    const input = this.page.locator(selectors.productos.fechaBajaInput).first();
+    const input = this.page.locator(productosSelectors.fechaBajaInput).first();
 
     if (await input.isVisible().catch(() => false)) {
       return (await input.inputValue()).trim();
     }
 
-    const readonlyValue = this.page.locator(this.readonlyValueNearLabelXPath(selectors.productos.labels.fechaBaja)).first();
+    const readonlyValue = this.page.locator(this.readonlyValueNearLabelXPath(productosSelectors.labels.fechaBaja)).first();
 
     if (await readonlyValue.isVisible().catch(() => false)) {
       return ((await readonlyValue.textContent()) ?? '').trim();
@@ -1321,8 +1326,8 @@ export class ProductosPage extends BasePage {
     return '';
   }
 
-  private async fieldTextValue(field: keyof typeof selectors.productos.fields, label: string): Promise<string> {
-    const input = this.page.locator(selectors.productos.fields[field]).first();
+  private async fieldTextValue(field: keyof typeof productosSelectors.fields, label: string): Promise<string> {
+    const input = this.page.locator(productosSelectors.fields[field]).first();
 
     if (await input.isVisible().catch(() => false)) {
       return (await input.inputValue().catch(() => '')).trim();
@@ -1337,8 +1342,8 @@ export class ProductosPage extends BasePage {
     return '';
   }
 
-  private async booleanFieldValue(field: keyof typeof selectors.productos.fields, label: string): Promise<boolean> {
-    const input = this.page.locator(selectors.productos.fields[field]).first();
+  private async booleanFieldValue(field: keyof typeof productosSelectors.fields, label: string): Promise<boolean> {
+    const input = this.page.locator(productosSelectors.fields[field]).first();
 
     if (await input.isVisible().catch(() => false)) {
       const checked = await input.isChecked().catch(() => undefined);
@@ -1349,22 +1354,22 @@ export class ProductosPage extends BasePage {
 
       const value = (await input.inputValue().catch(() => '')).trim();
 
-      return /^(true|1|si|s[ií]|verdadero)$/i.test(value);
+      return /^(true|1|si|s[iÃ­]|verdadero)$/i.test(value);
     }
 
     const text = await this.fieldTextValue(field, label);
 
-    return /^(true|1|si|s[ií]|verdadero)|✓|✔/i.test(text);
+    return /^(true|1|si|s[iÃ­]|verdadero)|âœ“|âœ”/i.test(text);
   }
 
   private async relacionValue(): Promise<string> {
-    const input = this.page.locator(selectors.productos.relacionInput).first();
+    const input = this.page.locator(productosSelectors.relacionInput).first();
 
     if (await input.isVisible().catch(() => false)) {
       return (await input.inputValue()).trim();
     }
 
-    const readonlyValue = this.page.locator(this.readonlyValueNearLabelXPath(selectors.productos.labels.relacion)).first();
+    const readonlyValue = this.page.locator(this.readonlyValueNearLabelXPath(productosSelectors.labels.relacion)).first();
 
     if (await readonlyValue.isVisible().catch(() => false)) {
       return ((await readonlyValue.textContent()) ?? '').trim();
@@ -1374,7 +1379,7 @@ export class ProductosPage extends BasePage {
   }
 
   private async saveCurrentProduct(): Promise<void> {
-    const saveButton = this.page.locator(selectors.productos.saveButton).first();
+    const saveButton = this.page.locator(productosSelectors.saveButton).first();
 
     await expect(saveButton).toBeVisible();
     await saveButton.click();
@@ -1382,21 +1387,21 @@ export class ProductosPage extends BasePage {
   }
 
   private async saveCurrentCommissionProduct(): Promise<void> {
-    const saveButton = this.page.locator(selectors.productosComision.saveButton).first();
+    const saveButton = this.page.locator(productosComisionSelectors.saveButton).first();
 
     await expect(saveButton).toBeVisible();
     await saveButton.click();
     await expect(saveButton).toBeHidden({ timeout: 30000 });
   }
 
-  private async productoComisionFieldValue(field: keyof typeof selectors.productosComision.fields): Promise<string> {
-    const input = this.page.locator(selectors.productosComision.fields[field]).first();
+  private async productoComisionFieldValue(field: keyof typeof productosComisionSelectors.fields): Promise<string> {
+    const input = this.page.locator(productosComisionSelectors.fields[field]).first();
 
     if (await input.isVisible().catch(() => false)) {
       return (await input.inputValue().catch(() => '')).trim();
     }
 
-    const label = selectors.productosComision.labels[field];
+    const label = productosComisionSelectors.labels[field];
     const readonlyValue = this.page.locator(this.readonlyValueNearLabelXPath(label)).first();
 
     if (await readonlyValue.isVisible().catch(() => false)) {
@@ -1407,7 +1412,7 @@ export class ProductosPage extends BasePage {
   }
 
   private async clickSaveExpectingValidation(): Promise<void> {
-    const saveButton = this.page.locator(selectors.productos.saveButton).first();
+    const saveButton = this.page.locator(productosSelectors.saveButton).first();
 
     await expect(saveButton).toBeVisible();
     await saveButton.click();
@@ -1431,7 +1436,7 @@ export class ProductosPage extends BasePage {
   }
 
   private async searchProduct(name: string): Promise<void> {
-    const searchInput = this.page.locator(selectors.productos.searchInput).first();
+    const searchInput = this.page.locator(productosSelectors.searchInput).first();
 
     await expect(searchInput).toBeVisible();
     await searchInput.fill(name);
@@ -1439,18 +1444,18 @@ export class ProductosPage extends BasePage {
   }
 
   private productRow(name: string): Locator {
-    return this.page.locator(selectors.productos.rows).filter({ hasText: name }).first();
+    return this.page.locator(productosSelectors.rows).filter({ hasText: name }).first();
   }
 
   private async openComisionesTab(): Promise<void> {
-    const tab = this.page.getByRole('tab', { name: new RegExp(selectors.productos.labels.tabComisiones, 'i') }).first();
+    const tab = this.page.getByRole('tab', { name: new RegExp(productosSelectors.labels.tabComisiones, 'i') }).first();
 
     await expect(tab).toBeVisible();
     await tab.click();
   }
 
   private async openConceptosTab(): Promise<void> {
-    const tab = this.page.getByRole('tab', { name: new RegExp(selectors.productos.labels.tabConceptos, 'i') }).first();
+    const tab = this.page.getByRole('tab', { name: new RegExp(productosSelectors.labels.tabConceptos, 'i') }).first();
 
     await expect(tab).toBeVisible();
     await tab.click();
@@ -1458,7 +1463,7 @@ export class ProductosPage extends BasePage {
 
   private async openInformacionGeneralTabIfVisible(): Promise<void> {
     const tab = this.page
-      .getByRole('tab', { name: new RegExp(selectors.productos.labels.tabInformacionGeneral, 'i') })
+      .getByRole('tab', { name: new RegExp(productosSelectors.labels.tabInformacionGeneral, 'i') })
       .first();
 
     if (await tab.isVisible().catch(() => false)) {
@@ -1467,11 +1472,11 @@ export class ProductosPage extends BasePage {
   }
 
   private async assertClienteObjetivoFieldsAreVisible(): Promise<void> {
-    await expect(this.checkboxField(selectors.productos.clienteObjetivo.tipoJuridico)).toBeVisible();
-    await expect(this.checkboxField(selectors.productos.clienteObjetivo.autonomoTipoFisico)).toBeVisible();
-    await expect(this.checkboxField(selectors.productos.clienteObjetivo.emprendedoresNuevaEmpresa)).toBeVisible();
-    await expect(this.page.locator(selectors.productos.clienteObjetivo.tamanoEmpresaContainer).first()).toBeVisible();
-    await expect(this.page.locator(selectors.productos.clienteObjetivo.tamanoEmpresaCheckboxes).first()).toBeVisible();
+    await expect(this.checkboxField(productosSelectors.clienteObjetivo.tipoJuridico)).toBeVisible();
+    await expect(this.checkboxField(productosSelectors.clienteObjetivo.autonomoTipoFisico)).toBeVisible();
+    await expect(this.checkboxField(productosSelectors.clienteObjetivo.emprendedoresNuevaEmpresa)).toBeVisible();
+    await expect(this.page.locator(productosSelectors.clienteObjetivo.tamanoEmpresaContainer).first()).toBeVisible();
+    await expect(this.page.locator(productosSelectors.clienteObjetivo.tamanoEmpresaCheckboxes).first()).toBeVisible();
   }
 
   private checkboxField(selector: string): Locator {
@@ -1489,11 +1494,11 @@ export class ProductosPage extends BasePage {
   }
 
   private async setAllCompanySizeTargetCheckboxes(checked: boolean): Promise<void> {
-    const checkboxes = this.page.locator(selectors.productos.clienteObjetivo.tamanoEmpresaCheckboxes);
+    const checkboxes = this.page.locator(productosSelectors.clienteObjetivo.tamanoEmpresaCheckboxes);
     const count = await checkboxes.count();
 
     if (count === 0) {
-      throw new Error('No se encontraron checkboxes de Tamaño de empresa objetivo.');
+      throw new Error('No se encontraron checkboxes de TamaÃ±o de empresa objetivo.');
     }
 
     for (let index = 0; index < count; index += 1) {
@@ -1506,11 +1511,11 @@ export class ProductosPage extends BasePage {
   }
 
   private async assertAllCompanySizeTargetCheckboxes(checked: boolean): Promise<void> {
-    const checkboxes = this.page.locator(selectors.productos.clienteObjetivo.tamanoEmpresaCheckboxes);
+    const checkboxes = this.page.locator(productosSelectors.clienteObjetivo.tamanoEmpresaCheckboxes);
     const count = await checkboxes.count();
 
     if (count === 0) {
-      throw new Error('No se encontraron checkboxes de Tamaño de empresa objetivo.');
+      throw new Error('No se encontraron checkboxes de TamaÃ±o de empresa objetivo.');
     }
 
     for (let index = 0; index < count; index += 1) {
@@ -1520,7 +1525,7 @@ export class ProductosPage extends BasePage {
 
   private async openOtraInformacionTabIfVisible(): Promise<void> {
     const tab = this.page
-      .getByRole('tab', { name: new RegExp(selectors.productos.labels.tabOtraInformacion, 'i') })
+      .getByRole('tab', { name: new RegExp(productosSelectors.labels.tabOtraInformacion, 'i') })
       .first();
 
     if (await tab.isVisible().catch(() => false)) {
@@ -1530,7 +1535,7 @@ export class ProductosPage extends BasePage {
 
   private async openLimitesAmbitoTab(): Promise<void> {
     const tab = this.page
-      .getByRole('tab', { name: new RegExp(selectors.productos.labels.tabLimitesAmbito, 'i') })
+      .getByRole('tab', { name: new RegExp(productosSelectors.labels.tabLimitesAmbito, 'i') })
       .first();
 
     await expect(tab).toBeVisible();
@@ -1538,10 +1543,10 @@ export class ProductosPage extends BasePage {
   }
 
   private async addCnaeToExcludedList(code: string): Promise<void> {
-    await this.page.locator(selectors.productos.cnae.excluidosAddLineButton).first().click();
+    await this.page.locator(productosSelectors.cnae.excluidosAddLineButton).first().click();
 
     const row = this.page.locator('tr.o_selected_row, tr:has(input)').last();
-    const input = row.locator(selectors.productos.cnae.lineInput).first();
+    const input = row.locator(productosSelectors.cnae.lineInput).first();
 
     await expect(input).toBeVisible();
     await input.fill(code);
@@ -1550,16 +1555,16 @@ export class ProductosPage extends BasePage {
   }
 
   private async assertCnaeIsNotAvailableInIncludedSelector(code: string): Promise<void> {
-    await this.page.locator(selectors.productos.cnae.incluidosAddLineButton).first().click();
+    await this.page.locator(productosSelectors.cnae.incluidosAddLineButton).first().click();
 
     const row = this.page.locator('tr.o_selected_row, tr:has(input)').last();
-    const input = row.locator(selectors.productos.cnae.lineInput).first();
+    const input = row.locator(productosSelectors.cnae.lineInput).first();
 
     await expect(input).toBeVisible();
     await input.fill(code);
 
     const option = this.page
-      .locator(selectors.productos.cnae.autocompleteOption)
+      .locator(productosSelectors.cnae.autocompleteOption)
       .filter({ hasText: new RegExp(this.escapeRegExp(code), 'i') })
       .filter({ hasNotText: /Crear|Buscar/i })
       .first();
@@ -1570,7 +1575,7 @@ export class ProductosPage extends BasePage {
 
   private async selectCnaeAutocompleteOption(code: string): Promise<void> {
     const option = this.page
-      .locator(selectors.productos.cnae.autocompleteOption)
+      .locator(productosSelectors.cnae.autocompleteOption)
       .filter({ hasText: new RegExp(this.escapeRegExp(code), 'i') })
       .filter({ hasNotText: /Crear|Buscar/i })
       .first();
@@ -1609,7 +1614,7 @@ export class ProductosPage extends BasePage {
     await input.fill(value);
 
     const option = this.page
-      .locator(selectors.productos.solapamientos.autocompleteOption)
+      .locator(productosSelectors.solapamientos.autocompleteOption)
       .filter({ hasText: new RegExp(this.escapeRegExp(value), 'i') })
       .filter({ hasNotText: /Crear|Buscar/i })
       .first();
@@ -1620,7 +1625,7 @@ export class ProductosPage extends BasePage {
 
   private async selectOverlapAutocompleteOption(value: string): Promise<void> {
     const option = this.page
-      .locator(selectors.productos.solapamientos.autocompleteOption)
+      .locator(productosSelectors.solapamientos.autocompleteOption)
       .filter({ hasText: new RegExp(this.escapeRegExp(value), 'i') })
       .filter({ hasNotText: /Crear|Buscar/i })
       .first();
@@ -1637,14 +1642,14 @@ export class ProductosPage extends BasePage {
   private overlapSelectorsByBlock(block: string): ProductoSolapamientoSelectors {
     const normalizedBlock = this.normalizeText(block);
     const mapping: Record<string, ProductoSolapamientoSelectors> = {
-      [this.normalizeText('Tipología de Cliente')]: selectors.productos.solapamientos.tipologiaCliente,
-      [this.normalizeText('Entidades Financieras')]: selectors.productos.solapamientos.entidadesFinancieras,
-      [this.normalizeText('Límites Geográficos (Provincias)')]:
-        selectors.productos.solapamientos.limitesGeograficosProvincias,
-      [this.normalizeText('Límites Geográficos (Códigos Postales)')]:
-        selectors.productos.solapamientos.limitesGeograficosCodigosPostales,
-      [this.normalizeText('Límites Geográficos (Ciudades)')]:
-        selectors.productos.solapamientos.limitesGeograficosCiudades
+      [this.normalizeText('TipologÃ­a de Cliente')]: productosSelectors.solapamientos.tipologiaCliente,
+      [this.normalizeText('Entidades Financieras')]: productosSelectors.solapamientos.entidadesFinancieras,
+      [this.normalizeText('LÃ­mites GeogrÃ¡ficos (Provincias)')]:
+        productosSelectors.solapamientos.limitesGeograficosProvincias,
+      [this.normalizeText('LÃ­mites GeogrÃ¡ficos (CÃ³digos Postales)')]:
+        productosSelectors.solapamientos.limitesGeograficosCodigosPostales,
+      [this.normalizeText('LÃ­mites GeogrÃ¡ficos (Ciudades)')]:
+        productosSelectors.solapamientos.limitesGeograficosCiudades
     };
     const selectorsByBlock = mapping[normalizedBlock];
 
@@ -1682,10 +1687,10 @@ export class ProductosPage extends BasePage {
   }
 
   private async addCommission(producto: ProductoFinancieroTestData): Promise<void> {
-    await this.page.locator(selectors.productos.comisiones.addLineButton).first().click();
+    await this.page.locator(productosSelectors.comisiones.addLineButton).first().click();
 
     const row = this.page.locator('tr.o_selected_row, tr:has(input)').last();
-    const commissionInput = row.locator(selectors.productos.comisiones.nameInput).first();
+    const commissionInput = row.locator(productosSelectors.comisiones.nameInput).first();
 
     await expect(commissionInput).toBeVisible();
     await commissionInput.fill(producto.comision.nombre);
@@ -1710,25 +1715,25 @@ export class ProductosPage extends BasePage {
   }
 
   private async addCommissionConceptLineFromData(linea: ProductoLineaComision): Promise<Locator> {
-    await this.page.locator(selectors.productos.conceptos.addLineButton).first().click();
+    await this.page.locator(productosSelectors.conceptos.addLineButton).first().click();
 
     const row = this.page.locator('tr.o_selected_row, tr:has(input)').last();
-    const conceptoInput = row.locator(selectors.productos.conceptos.conceptoInput).first();
+    const conceptoInput = row.locator(productosSelectors.conceptos.conceptoInput).first();
 
     await expect(conceptoInput).toBeVisible();
     await conceptoInput.fill(linea.concepto);
     await this.selectConceptAutocompleteOption(linea.concepto);
-    await this.fillLineCombo(row, selectors.productos.conceptos.tipoInput, linea.tipo);
-    await this.fillLineCombo(row, selectors.productos.conceptos.modoInput, linea.modo);
-    await this.fillLineNumeric(row, selectors.productos.conceptos.porcentajeMinimoInput, linea.porcentajeMinimo, 0);
-    await this.fillLineNumeric(row, selectors.productos.conceptos.porcentajeMaximoInput, linea.porcentajeMaximo, 1);
-    await this.fillLineCombo(row, selectors.productos.conceptos.periodicidadInput, linea.periodicidad);
+    await this.fillLineCombo(row, productosSelectors.conceptos.tipoInput, linea.tipo);
+    await this.fillLineCombo(row, productosSelectors.conceptos.modoInput, linea.modo);
+    await this.fillLineNumeric(row, productosSelectors.conceptos.porcentajeMinimoInput, linea.porcentajeMinimo, 0);
+    await this.fillLineNumeric(row, productosSelectors.conceptos.porcentajeMaximoInput, linea.porcentajeMaximo, 1);
+    await this.fillLineCombo(row, productosSelectors.conceptos.periodicidadInput, linea.periodicidad);
 
     return row;
   }
 
   private async assertCommissionProductAutocomplete(row: Locator): Promise<void> {
-    const productoComisionInput = row.locator(selectors.productos.conceptos.productoComisionInput).first();
+    const productoComisionInput = row.locator(productosSelectors.conceptos.productoComisionInput).first();
 
     if (await productoComisionInput.isVisible().catch(() => false)) {
       await expect
@@ -1737,7 +1742,7 @@ export class ProductosPage extends BasePage {
       return;
     }
 
-    await expect(row).toContainText(/comisi[oó]n/i);
+    await expect(row).toContainText(/comisi[oÃ³]n/i);
   }
 
   private async editCommissionConceptMaxPercentage(producto: ProductoFinancieroTestData): Promise<void> {
@@ -1747,18 +1752,18 @@ export class ProductosPage extends BasePage {
     await row.click();
     await this.fillLineNumeric(
       row,
-      selectors.productos.conceptos.porcentajeMaximoInput,
+      productosSelectors.conceptos.porcentajeMaximoInput,
       producto.lineaComision.porcentajeMaximoEditado,
       1
     );
   }
 
   private async fillValidCommissionLineNumericValues(row: Locator, producto: ProductoFinancieroTestData): Promise<void> {
-    await this.fillLineNumeric(row, selectors.productos.conceptos.porcentajeMinimoInput, producto.lineaComision.porcentajeMinimo, 0);
-    await this.fillLineNumeric(row, selectors.productos.conceptos.porcentajeMaximoInput, producto.lineaComision.porcentajeMaximo, 1);
-    await this.fillOptionalLineNumeric(row, selectors.productos.conceptos.plazoMinimoMesesInput, producto.lineaComision.plazoMinimoMeses, 2);
-    await this.fillOptionalLineNumeric(row, selectors.productos.conceptos.importeMinimoInput, producto.lineaComision.importeMinimo, 3);
-    await this.fillOptionalLineNumeric(row, selectors.productos.conceptos.importeMaximoInput, producto.lineaComision.importeMaximo, 4);
+    await this.fillLineNumeric(row, productosSelectors.conceptos.porcentajeMinimoInput, producto.lineaComision.porcentajeMinimo, 0);
+    await this.fillLineNumeric(row, productosSelectors.conceptos.porcentajeMaximoInput, producto.lineaComision.porcentajeMaximo, 1);
+    await this.fillOptionalLineNumeric(row, productosSelectors.conceptos.plazoMinimoMesesInput, producto.lineaComision.plazoMinimoMeses, 2);
+    await this.fillOptionalLineNumeric(row, productosSelectors.conceptos.importeMinimoInput, producto.lineaComision.importeMinimo, 3);
+    await this.fillOptionalLineNumeric(row, productosSelectors.conceptos.importeMaximoInput, producto.lineaComision.importeMaximo, 4);
   }
 
   private async applyInvalidCommissionLineCase(
@@ -1771,7 +1776,7 @@ export class ProductosPage extends BasePage {
     await commissionRow.click();
 
     if (row.modo) {
-      await this.fillLineCombo(commissionRow, selectors.productos.conceptos.modoInput, row.modo);
+      await this.fillLineCombo(commissionRow, productosSelectors.conceptos.modoInput, row.modo);
     }
 
     const primaryField = this.commissionLineFieldByLabel(row.campo);
@@ -1791,7 +1796,7 @@ export class ProductosPage extends BasePage {
     const row = this.commissionConceptRow(concepto).first();
 
     await expect(row).toBeVisible();
-    const deleteButton = row.locator(selectors.productos.conceptos.deleteButton).first();
+    const deleteButton = row.locator(productosSelectors.conceptos.deleteButton).first();
 
     if (await deleteButton.isVisible().catch(() => false)) {
       await deleteButton.click();
@@ -1804,7 +1809,7 @@ export class ProductosPage extends BasePage {
 
   private commissionConceptRow(concepto: string): Locator {
     return this.page
-      .locator(selectors.productos.conceptos.rows)
+      .locator(productosSelectors.conceptos.rows)
       .filter({ hasText: new RegExp(this.escapeRegExp(concepto), 'i') });
   }
 
@@ -1820,12 +1825,12 @@ export class ProductosPage extends BasePage {
   }
 
   private async setLinePeriodicityAndAssertDuration(row: Locator, periodicity: string, expectedDuration: string): Promise<void> {
-    await this.fillLineCombo(row, selectors.productos.conceptos.periodicidadInput, periodicity);
+    await this.fillLineCombo(row, productosSelectors.conceptos.periodicidadInput, periodicity);
     await expect
-      .poll(async () => this.lineCellValue(row, 'duracion_value', selectors.productos.conceptos.duracionInput, 2))
+      .poll(async () => this.lineCellValue(row, 'duracion_value', productosSelectors.conceptos.duracionInput, 2))
       .toMatch(new RegExp(`^${this.escapeRegExp(expectedDuration)}(?:[,.]0+)?$`));
     await expect
-      .poll(async () => this.lineCellValue(row, 'duracion_unit', selectors.productos.conceptos.unidadInput, 0))
+      .poll(async () => this.lineCellValue(row, 'duracion_unit', productosSelectors.conceptos.unidadInput, 0))
       .toMatch(/Meses/i);
   }
 
@@ -1835,7 +1840,7 @@ export class ProductosPage extends BasePage {
     await expect(row).toBeVisible();
     await row.click();
 
-    const checkbox = row.locator(selectors.productos.conceptos.financiadoInput).first();
+    const checkbox = row.locator(productosSelectors.conceptos.financiadoInput).first();
 
     await expect(checkbox).toBeVisible();
 
@@ -1849,7 +1854,7 @@ export class ProductosPage extends BasePage {
 
     await expect(row).toBeVisible();
 
-    const checkbox = row.locator(selectors.productos.conceptos.financiadoInput).first();
+    const checkbox = row.locator(productosSelectors.conceptos.financiadoInput).first();
 
     if (await checkbox.isVisible().catch(() => false)) {
       await expect(checkbox).toBeChecked({ checked });
@@ -1859,15 +1864,15 @@ export class ProductosPage extends BasePage {
     const cellText = ((await row.locator('td[name="financiado"], td[name="financed"], td[name="is_financed"]').first().textContent().catch(() => '')) ?? '').trim();
 
     if (checked) {
-      expect(/true|si|s[ií]|✓|✔/i.test(cellText)).toBeTruthy();
+      expect(/true|si|s[iÃ­]|âœ“|âœ”/i.test(cellText)).toBeTruthy();
     } else {
-      expect(/true|si|s[ií]|✓|✔/i.test(cellText)).toBeFalsy();
+      expect(/true|si|s[iÃ­]|âœ“|âœ”/i.test(cellText)).toBeFalsy();
     }
   }
 
   private async assertLineDurationFieldsAreLocked(row: Locator): Promise<void> {
-    const durationInput = await this.optionalLineInput(row, selectors.productos.conceptos.duracionInput, 2);
-    const unitInput = await this.optionalLineInput(row, selectors.productos.conceptos.unidadInput, 0);
+    const durationInput = await this.optionalLineInput(row, productosSelectors.conceptos.duracionInput, 2);
+    const unitInput = await this.optionalLineInput(row, productosSelectors.conceptos.unidadInput, 0);
 
     if (durationInput) {
       await expect(durationInput).toBeDisabled();
@@ -1881,14 +1886,14 @@ export class ProductosPage extends BasePage {
   private async assertLineAmountFieldsVisible(row: Locator): Promise<void> {
     await this.assertLineCellOrInputVisible(
       row,
-      selectors.productos.conceptos.importeMinimoCell,
-      selectors.productos.conceptos.importeMinimoInput,
+      productosSelectors.conceptos.importeMinimoCell,
+      productosSelectors.conceptos.importeMinimoInput,
       3
     );
     await this.assertLineCellOrInputVisible(
       row,
-      selectors.productos.conceptos.importeMaximoCell,
-      selectors.productos.conceptos.importeMaximoInput,
+      productosSelectors.conceptos.importeMaximoCell,
+      productosSelectors.conceptos.importeMaximoInput,
       4
     );
   }
@@ -1896,14 +1901,14 @@ export class ProductosPage extends BasePage {
   private async assertLineAmountFieldsHidden(row: Locator): Promise<void> {
     await this.assertLineCellOrInputHidden(
       row,
-      selectors.productos.conceptos.importeMinimoCell,
-      selectors.productos.conceptos.importeMinimoInput,
+      productosSelectors.conceptos.importeMinimoCell,
+      productosSelectors.conceptos.importeMinimoInput,
       3
     );
     await this.assertLineCellOrInputHidden(
       row,
-      selectors.productos.conceptos.importeMaximoCell,
-      selectors.productos.conceptos.importeMaximoInput,
+      productosSelectors.conceptos.importeMaximoCell,
+      productosSelectors.conceptos.importeMaximoInput,
       4
     );
   }
@@ -1911,14 +1916,14 @@ export class ProductosPage extends BasePage {
   private async assertLinePercentageFieldsVisible(row: Locator): Promise<void> {
     await this.assertLineCellOrInputVisible(
       row,
-      selectors.productos.conceptos.porcentajeMinimoCell,
-      selectors.productos.conceptos.porcentajeMinimoInput,
+      productosSelectors.conceptos.porcentajeMinimoCell,
+      productosSelectors.conceptos.porcentajeMinimoInput,
       0
     );
     await this.assertLineCellOrInputVisible(
       row,
-      selectors.productos.conceptos.porcentajeMaximoCell,
-      selectors.productos.conceptos.porcentajeMaximoInput,
+      productosSelectors.conceptos.porcentajeMaximoCell,
+      productosSelectors.conceptos.porcentajeMaximoInput,
       1
     );
   }
@@ -1926,14 +1931,14 @@ export class ProductosPage extends BasePage {
   private async assertLinePercentageFieldsHidden(row: Locator): Promise<void> {
     await this.assertLineCellOrInputHidden(
       row,
-      selectors.productos.conceptos.porcentajeMinimoCell,
-      selectors.productos.conceptos.porcentajeMinimoInput,
+      productosSelectors.conceptos.porcentajeMinimoCell,
+      productosSelectors.conceptos.porcentajeMinimoInput,
       0
     );
     await this.assertLineCellOrInputHidden(
       row,
-      selectors.productos.conceptos.porcentajeMaximoCell,
-      selectors.productos.conceptos.porcentajeMaximoInput,
+      productosSelectors.conceptos.porcentajeMaximoCell,
+      productosSelectors.conceptos.porcentajeMaximoInput,
       1
     );
   }
@@ -1941,20 +1946,20 @@ export class ProductosPage extends BasePage {
   private async assertLineDurationFieldsHidden(row: Locator): Promise<void> {
     await this.assertLineCellOrInputHidden(
       row,
-      selectors.productos.conceptos.duracionCell,
-      selectors.productos.conceptos.duracionInput,
+      productosSelectors.conceptos.duracionCell,
+      productosSelectors.conceptos.duracionInput,
       2
     );
     await this.assertLineCellOrInputHidden(
       row,
-      selectors.productos.conceptos.unidadCell,
-      selectors.productos.conceptos.unidadInput,
+      productosSelectors.conceptos.unidadCell,
+      productosSelectors.conceptos.unidadInput,
       0
     );
   }
 
   private async tryForceInvalidDuration(row: Locator, invalidDuration: string, expectedDuration: string): Promise<void> {
-    const durationInput = await this.optionalLineInput(row, selectors.productos.conceptos.duracionInput, 2);
+    const durationInput = await this.optionalLineInput(row, productosSelectors.conceptos.duracionInput, 2);
 
     if (!durationInput) {
       return;
@@ -1969,7 +1974,7 @@ export class ProductosPage extends BasePage {
     await this.clickSaveExpectingValidation();
     await this.closeValidationDialogIfVisible();
     await expect
-      .poll(async () => this.lineCellValue(row, 'duracion_value', selectors.productos.conceptos.duracionInput, 2))
+      .poll(async () => this.lineCellValue(row, 'duracion_value', productosSelectors.conceptos.duracionInput, 2))
       .toMatch(new RegExp(`^${this.escapeRegExp(expectedDuration)}(?:[,.]0+)?$`));
   }
 
@@ -2083,7 +2088,7 @@ export class ProductosPage extends BasePage {
 
   private async selectConceptAutocompleteOption(value: string): Promise<void> {
     const option = this.page
-      .locator(selectors.productos.conceptos.autocompleteOption)
+      .locator(productosSelectors.conceptos.autocompleteOption)
       .filter({ hasText: new RegExp(this.escapeRegExp(value), 'i') })
       .filter({ hasNotText: /Crear|Buscar/i })
       .first();
@@ -2098,7 +2103,7 @@ export class ProductosPage extends BasePage {
   }
 
   private async assertCommissionWasCopied(producto: ProductoFinancieroTestData): Promise<void> {
-    const rows = this.page.locator(selectors.productos.comisiones.rows);
+    const rows = this.page.locator(productosSelectors.comisiones.rows);
     const commissionRow = rows.filter({ hasText: new RegExp(this.escapeRegExp(producto.comision.nombre), 'i') }).first();
 
     await expect(commissionRow).toBeVisible();
@@ -2106,7 +2111,7 @@ export class ProductosPage extends BasePage {
   }
 
   private async commissionValueInput(row: Locator): Promise<Locator | undefined> {
-    const inputs = row.locator(selectors.productos.comisiones.valueInput);
+    const inputs = row.locator(productosSelectors.comisiones.valueInput);
     const count = await inputs.count();
 
     if (count === 0) {
@@ -2117,13 +2122,13 @@ export class ProductosPage extends BasePage {
   }
 
   private async enterEditModeIfNeeded(): Promise<void> {
-    const saveButton = this.page.locator(selectors.productos.saveButton).first();
+    const saveButton = this.page.locator(productosSelectors.saveButton).first();
 
     if (await saveButton.isVisible().catch(() => false)) {
       return;
     }
 
-    const editButton = this.page.locator(selectors.productos.editButton).first();
+    const editButton = this.page.locator(productosSelectors.editButton).first();
 
     await expect(editButton).toBeVisible();
     await editButton.click();
@@ -2141,7 +2146,7 @@ export class ProductosPage extends BasePage {
     value: string
   ): Promise<void> {
     const option = this.page
-      .locator(selectors.productos.autocompleteOption)
+      .locator(productosSelectors.autocompleteOption)
       .filter({ hasText: new RegExp(this.escapeRegExp(value), 'i') })
       .filter({ hasNotText: /Crear|Buscar/i })
       .first();
@@ -2194,16 +2199,16 @@ export class ProductosPage extends BasePage {
   }
 
   private async hasNameRequiredValidation(): Promise<boolean> {
-    const validationText = await this.page.locator(selectors.common.validationMessage).allTextContents();
+    const validationText = await this.page.locator(commonSelectors.validationMessage).allTextContents();
     const pageText = (await this.page.locator('body').textContent()) ?? '';
-    const invalidFieldsCount = await this.page.locator(selectors.common.invalidField).count();
+    const invalidFieldsCount = await this.page.locator(commonSelectors.invalidField).count();
     const text = [...validationText, pageText].join(' ');
 
     return invalidFieldsCount > 0 || (/nombre/i.test(text) && /obligator|required|requerid/i.test(text));
   }
 
   private async hasDuplicatedCommissionLineValidation(): Promise<boolean> {
-    const validationText = await this.page.locator(selectors.common.validationMessage).allTextContents();
+    const validationText = await this.page.locator(commonSelectors.validationMessage).allTextContents();
     const pageText = (await this.page.locator('body').textContent()) ?? '';
     const text = [...validationText, pageText].join(' ');
 
@@ -2211,60 +2216,60 @@ export class ProductosPage extends BasePage {
   }
 
   private async hasCommissionLineNumericValidation(): Promise<boolean> {
-    const validationText = await this.page.locator(selectors.common.validationMessage).allTextContents();
+    const validationText = await this.page.locator(commonSelectors.validationMessage).allTextContents();
     const pageText = (await this.page.locator('body').textContent()) ?? '';
-    const invalidFieldsCount = await this.page.locator(selectors.common.invalidField).count();
+    const invalidFieldsCount = await this.page.locator(commonSelectors.invalidField).count();
     const text = [...validationText, pageText].join(' ');
 
     return (
       invalidFieldsCount > 0 ||
-      /valor negativo|negativ|porcentaje|fuera de rango|m[ií]nimo.*m[aá]ximo|importe m[ií]nimo.*importe m[aá]ximo|mayor(?:es)? o igual(?:es)?|menor(?:es)? o igual(?:es)?/i.test(
+      /valor negativo|negativ|porcentaje|fuera de rango|m[iÃ­]nimo.*m[aÃ¡]ximo|importe m[iÃ­]nimo.*importe m[aÃ¡]ximo|mayor(?:es)? o igual(?:es)?|menor(?:es)? o igual(?:es)?/i.test(
         text
       )
     );
   }
 
   private async hasOrphanCommissionConceptValidation(): Promise<boolean> {
-    const validationText = await this.page.locator(selectors.common.validationMessage).allTextContents();
-    const conceptValidationText = await this.page.locator(selectors.conceptosComision.validationText).allTextContents();
+    const validationText = await this.page.locator(commonSelectors.validationMessage).allTextContents();
+    const conceptValidationText = await this.page.locator(conceptosComisionSelectors.validationText).allTextContents();
     const pageText = (await this.page.locator('body').textContent()) ?? '';
     const text = [...validationText, ...conceptValidationText, pageText].join(' ');
 
-    return /no tiene configurado.*producto de comisi[oó]n|producto de comisi[oó]n.*obligator|producto de comisi[oó]n.*requerid/i.test(
+    return /no tiene configurado.*producto de comisi[oÃ³]n|producto de comisi[oÃ³]n.*obligator|producto de comisi[oÃ³]n.*requerid/i.test(
       text
     );
   }
 
   private async hasNegativeNumericValidation(): Promise<boolean> {
-    const validationText = await this.page.locator(selectors.common.validationMessage).allTextContents();
+    const validationText = await this.page.locator(commonSelectors.validationMessage).allTextContents();
     const pageText = (await this.page.locator('body').textContent()) ?? '';
-    const invalidFieldsCount = await this.page.locator(selectors.common.invalidField).count();
+    const invalidFieldsCount = await this.page.locator(commonSelectors.invalidField).count();
     const text = [...validationText, pageText].join(' ');
 
     return (
       invalidFieldsCount > 0 ||
-      /valores numericos|valores numéricos|mayores o iguales|mayor o igual|negativ/i.test(text)
+      /valores numericos|valores numÃ©ricos|mayores o iguales|mayor o igual|negativ/i.test(text)
     );
   }
 
   private async hasRangeOrCoherenceValidation(): Promise<boolean> {
-    const validationText = await this.page.locator(selectors.common.validationMessage).allTextContents();
+    const validationText = await this.page.locator(commonSelectors.validationMessage).allTextContents();
     const pageText = (await this.page.locator('body').textContent()) ?? '';
-    const invalidFieldsCount = await this.page.locator(selectors.common.invalidField).count();
+    const invalidFieldsCount = await this.page.locator(commonSelectors.invalidField).count();
     const text = [...validationText, pageText].join(' ');
 
     return (
       invalidFieldsCount > 0 ||
-      /0\s*-?\s*100|entre 0 y 100|mayor(?:es)? o igual(?:es)?|menor(?:es)? o igual(?:es)?|m[ií]nimo.*m[aá]ximo|m[aá]ximo.*m[ií]nimo|coherencia|rango|porcentaje/i.test(
+      /0\s*-?\s*100|entre 0 y 100|mayor(?:es)? o igual(?:es)?|menor(?:es)? o igual(?:es)?|m[iÃ­]nimo.*m[aÃ¡]ximo|m[aÃ¡]ximo.*m[iÃ­]nimo|coherencia|rango|porcentaje/i.test(
         text
       )
     );
   }
 
   private async hasCommercialDateCoherenceValidation(): Promise<boolean> {
-    const validationText = await this.page.locator(selectors.common.validationMessage).allTextContents();
+    const validationText = await this.page.locator(commonSelectors.validationMessage).allTextContents();
     const pageText = (await this.page.locator('body').textContent()) ?? '';
-    const invalidFieldsCount = await this.page.locator(selectors.common.invalidField).count();
+    const invalidFieldsCount = await this.page.locator(commonSelectors.invalidField).count();
     const text = [...validationText, pageText].join(' ');
 
     return (
@@ -2274,9 +2279,9 @@ export class ProductosPage extends BasePage {
   }
 
   private async hasFichaDateCoherenceValidation(): Promise<boolean> {
-    const validationText = await this.page.locator(selectors.common.validationMessage).allTextContents();
+    const validationText = await this.page.locator(commonSelectors.validationMessage).allTextContents();
     const pageText = (await this.page.locator('body').textContent()) ?? '';
-    const invalidFieldsCount = await this.page.locator(selectors.common.invalidField).count();
+    const invalidFieldsCount = await this.page.locator(commonSelectors.invalidField).count();
     const text = [...validationText, pageText].join(' ');
 
     return (
@@ -2309,7 +2314,7 @@ export class ProductosPage extends BasePage {
   }
 
   private async closeCommissionConceptValidationDialogIfVisible(): Promise<void> {
-    const closeButton = this.page.locator(selectors.conceptosComision.dialogCloseButton).first();
+    const closeButton = this.page.locator(conceptosComisionSelectors.dialogCloseButton).first();
 
     if (await closeButton.isVisible().catch(() => false)) {
       await closeButton.click();
@@ -2329,7 +2334,7 @@ export class ProductosPage extends BasePage {
   private async dismissKnownInactivityAlertIfVisible(): Promise<void> {
     const inactivityDialog = this.page
       .locator('.modal:visible, [role="dialog"]:visible')
-      .filter({ hasText: /inactividad|sesion|sesión|expirad|duplicad/i })
+      .filter({ hasText: /inactividad|sesion|sesiÃ³n|expirad|duplicad/i })
       .first();
 
     if (!(await inactivityDialog.isVisible().catch(() => false))) {
@@ -2377,15 +2382,15 @@ export class ProductosPage extends BasePage {
 
   private async applyValidProductNumericValues(): Promise<void> {
     const values: Array<{ campo: string; valor: string }> = [
-      { campo: 'Reaval mínimo (%)', valor: '10' },
-      { campo: 'Reaval máximo (%)', valor: '80' },
-      { campo: 'Interés (%)', valor: '3.5' },
-      { campo: 'Importe mínimo (€)', valor: '5000' },
-      { campo: 'Importe máximo (€)', valor: '500000' },
-      { campo: 'Mínimo (meses)', valor: '12' },
-      { campo: 'Máximo (meses)', valor: '120' },
-      { campo: 'Porcentaje compartido mínimo (%)', valor: '0' },
-      { campo: 'Porcentaje compartido máximo (%)', valor: '100' }
+      { campo: 'Reaval mÃ­nimo (%)', valor: '10' },
+      { campo: 'Reaval mÃ¡ximo (%)', valor: '80' },
+      { campo: 'InterÃ©s (%)', valor: '3.5' },
+      { campo: 'Importe mÃ­nimo (â‚¬)', valor: '5000' },
+      { campo: 'Importe mÃ¡ximo (â‚¬)', valor: '500000' },
+      { campo: 'MÃ­nimo (meses)', valor: '12' },
+      { campo: 'MÃ¡ximo (meses)', valor: '120' },
+      { campo: 'Porcentaje compartido mÃ­nimo (%)', valor: '0' },
+      { campo: 'Porcentaje compartido mÃ¡ximo (%)', valor: '100' }
     ];
 
     for (const value of values) {
@@ -2399,54 +2404,54 @@ export class ProductosPage extends BasePage {
     const normalizedCampo = this.normalizeText(campo);
     const fields: ProductoCampoNumerico[] = [
       {
-        campo: 'Reaval mínimo (%)',
+        campo: 'Reaval mÃ­nimo (%)',
         key: 'reavalMinimo',
-        label: selectors.productos.labels.reavalMinimo
+        label: productosSelectors.labels.reavalMinimo
       },
       {
-        campo: 'Reaval máximo (%)',
+        campo: 'Reaval mÃ¡ximo (%)',
         key: 'reavalMaximo',
-        label: selectors.productos.labels.reavalMaximo
+        label: productosSelectors.labels.reavalMaximo
       },
       {
-        campo: 'Importe mínimo (€)',
+        campo: 'Importe mÃ­nimo (â‚¬)',
         key: 'importeMinimo',
-        label: selectors.productos.labels.importeMinimo
+        label: productosSelectors.labels.importeMinimo
       },
       {
-        campo: 'Importe máximo (€)',
+        campo: 'Importe mÃ¡ximo (â‚¬)',
         key: 'importeMaximo',
-        label: selectors.productos.labels.importeMaximo
+        label: productosSelectors.labels.importeMaximo
       },
       {
-        campo: 'Mínimo (meses)',
+        campo: 'MÃ­nimo (meses)',
         key: 'plazoMinimoMeses',
-        label: selectors.productos.labels.plazoMinimoMeses
+        label: productosSelectors.labels.plazoMinimoMeses
       },
       {
-        campo: 'Máximo (meses)',
+        campo: 'MÃ¡ximo (meses)',
         key: 'plazoMaximoMeses',
-        label: selectors.productos.labels.plazoMaximoMeses
+        label: productosSelectors.labels.plazoMaximoMeses
       },
       {
-        campo: 'Descuento (días)',
+        campo: 'Descuento (dÃ­as)',
         key: 'descuentoDias',
-        label: selectors.productos.labels.descuentoDias
+        label: productosSelectors.labels.descuentoDias
       },
       {
-        campo: 'Interés (%)',
+        campo: 'InterÃ©s (%)',
         key: 'interes',
-        label: selectors.productos.labels.interes
+        label: productosSelectors.labels.interes
       },
       {
-        campo: 'Porcentaje compartido mínimo (%)',
+        campo: 'Porcentaje compartido mÃ­nimo (%)',
         key: 'porcentajeCompartidoMinimo',
-        label: selectors.productos.labels.porcentajeCompartidoMinimo
+        label: productosSelectors.labels.porcentajeCompartidoMinimo
       },
       {
-        campo: 'Porcentaje compartido máximo (%)',
+        campo: 'Porcentaje compartido mÃ¡ximo (%)',
         key: 'porcentajeCompartidoMaximo',
-        label: selectors.productos.labels.porcentajeCompartidoMaximo
+        label: productosSelectors.labels.porcentajeCompartidoMaximo
       }
     ];
     const field = fields.find((candidate) => this.normalizeText(candidate.campo) === normalizedCampo);
@@ -2462,38 +2467,38 @@ export class ProductosPage extends BasePage {
     const normalizedCampo = this.normalizeText(campo);
     const fields: ProductoLineaComisionCampo[] = [
       {
-        campo: 'Plazo mín. (meses)',
-        selector: selectors.productos.conceptos.plazoMinimoMesesInput,
+        campo: 'Plazo mÃ­n. (meses)',
+        selector: productosSelectors.conceptos.plazoMinimoMesesInput,
         fallbackIndex: 2
       },
       {
-        campo: '% mín.',
-        selector: selectors.productos.conceptos.porcentajeMinimoInput,
+        campo: '% mÃ­n.',
+        selector: productosSelectors.conceptos.porcentajeMinimoInput,
         fallbackIndex: 0
       },
       {
-        campo: '% máx.',
-        selector: selectors.productos.conceptos.porcentajeMaximoInput,
+        campo: '% mÃ¡x.',
+        selector: productosSelectors.conceptos.porcentajeMaximoInput,
         fallbackIndex: 1
       },
       {
-        campo: 'PD mín.',
-        selector: selectors.productos.conceptos.pdMinimoInput,
+        campo: 'PD mÃ­n.',
+        selector: productosSelectors.conceptos.pdMinimoInput,
         fallbackIndex: 5
       },
       {
-        campo: 'PD máx.',
-        selector: selectors.productos.conceptos.pdMaximoInput,
+        campo: 'PD mÃ¡x.',
+        selector: productosSelectors.conceptos.pdMaximoInput,
         fallbackIndex: 6
       },
       {
-        campo: 'Imp. mín. (€)',
-        selector: selectors.productos.conceptos.importeMinimoInput,
+        campo: 'Imp. mÃ­n. (â‚¬)',
+        selector: productosSelectors.conceptos.importeMinimoInput,
         fallbackIndex: 3
       },
       {
-        campo: 'Imp. máx. (€)',
-        selector: selectors.productos.conceptos.importeMaximoInput,
+        campo: 'Imp. mÃ¡x. (â‚¬)',
+        selector: productosSelectors.conceptos.importeMaximoInput,
         fallbackIndex: 4
       }
     ];
@@ -2510,7 +2515,7 @@ export class ProductosPage extends BasePage {
     return value
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[€%()]/g, '')
+      .replace(/[â‚¬%()]/g, '')
       .replace(/\s+/g, ' ')
       .trim()
       .toLowerCase();
@@ -2596,6 +2601,7 @@ interface ProductoSolapamientoSelectors {
 
 interface ProductoCampoNumerico {
   campo: string;
-  key: keyof typeof selectors.productos.fields;
+  key: keyof typeof productosSelectors.fields;
   label: string;
 }
+

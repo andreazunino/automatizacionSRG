@@ -204,7 +204,7 @@ export const createPersonaFisicaTestData = (): PersonaFisicaTestData => {
     nif: generateNif(),
     fechaNacimiento: PERSONA_FISICA_BIRTH_DATE,
     edadEsperada: calculateAge(PERSONA_FISICA_BIRTH_DATE),
-    paisNacimiento: 'EspaÃ±a',
+    paisNacimiento: 'España',
     sexo: 'Hombre'
   };
 };
@@ -240,7 +240,7 @@ export const createPersonaFisicaDocumentoTestData = (): PersonaFisicaDocumentoTe
     nifValido: generateNif(),
     nieValido: generateNie(),
     fechaNacimiento: '01/01/1990',
-    paisNacimiento: 'EspaÃ±a',
+    paisNacimiento: 'España',
     sexo: 'Hombre'
   };
 };
@@ -283,7 +283,7 @@ export const createEmpresaBancoEspanaTestData = (): EmpresaBancoEspanaTestData =
   return {
     nombre: `Empresa BE ${suffix}`,
     situacionBe: 'Activo',
-    vinculacionAapp: 'Dependiente de la AdministraciÃ³n Central espaÃ±ola',
+    vinculacionAapp: 'Dependiente de la Administración Central española',
     sectorInstitucional: 'Sociedades no financieras'
   };
 };
@@ -292,7 +292,7 @@ export const createEmpresaDireccionExtendidaTestData = (): EmpresaDireccionExten
   const suffix = uniqueSuffix();
 
   return {
-    nombre: `Empresa DirecciÃ³n ${suffix}`,
+    nombre: `Empresa Dirección ${suffix}`,
     tipoVia: 'Calle',
     numero: '25',
     planta: '3',
@@ -359,7 +359,7 @@ export const createUnidadDecisionTestData = (): UnidadDecisionTestData => {
   return {
     nombre: `Unidad Decision Test ${suffix}`,
     codigo: uniqueDecisionUnitCode(),
-    grupoEconomico: 'Grupo econÃ³mico con miembros'
+    grupoEconomico: 'Grupo económico con miembros'
   };
 };
 

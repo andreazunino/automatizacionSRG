@@ -8,5 +8,5 @@
     listFilterButton:
       'button:has-text("Filtros"), button:has-text("Filters"), .o_searchview_dropdown_toggler',
     typologyFilterOption:
-      '[role="menuitem"]:has-text("TipologÃ­a"), [role="option"]:has-text("TipologÃ­a"), .dropdown-item:has-text("TipologÃ­a"), [role="menuitem"]:has-text("Tipologia"), [role="option"]:has-text("Tipologia"), .dropdown-item:has-text("Tipologia")'
+      '[role="menuitem"]:has-text("Tipología"), [role="option"]:has-text("Tipología"), .dropdown-item:has-text("Tipología"), [role="menuitem"]:has-text("Tipologia"), [role="option"]:has-text("Tipologia"), .dropdown-item:has-text("Tipologia")'
 } as const;

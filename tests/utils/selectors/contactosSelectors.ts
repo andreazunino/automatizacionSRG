@@ -7,7 +7,7 @@
     resultsTable: '.o_list_table, table',
     firstResult: '.o_data_row:first-child, tbody tr:first-child',
     editButton: 'button:has-text("Editar")',
-    deleteButton: '.o_cp_action_menus button, button:has-text("AcciÃ³n")',
+    deleteButton: '.o_cp_action_menus button, button:has-text("Acción")',
     confirmDeleteButton: '.modal button:has-text("Eliminar"), .modal button:has-text("Aceptar")',
     form: {
       saveButton: 'button[aria-label="Guardar manualmente"], button:has-text("Guardar")',
@@ -29,45 +29,45 @@
       personaPublicaInput:
         'div[name="persona_publica"] input, div[name="is_public_person"] input, div[name="public_person"] input, input[name="persona_publica"], input[name="is_public_person"], input[name="public_person"]',
       labels: {
-        typeFisico: 'FÃ­sico',
+        typeFisico: 'Físico',
         nombre: 'Nombre?',
         primerApellido: 'Primer Apellido?',
         segundoApellido: 'Segundo Apellido',
         nif: 'NIF?',
         tipoDocumento: 'Tipo de documento?',
-        tabPersonasFisicas: 'Personas FÃ­sicas',
+        tabPersonasFisicas: 'Personas Físicas',
         fechaNacimiento: 'Fecha de nacimiento?',
         sexo: 'Sexo?',
-        paisNacimiento: 'PaÃ­s de nacimiento?',
+        paisNacimiento: 'País de nacimiento?',
         fallecido: 'Fallecido/a',
-        personaPublica: 'Persona PÃºblica'
+        personaPublica: 'Persona Pública'
       }
     },
     empresa: {
       labels: {
-        typeJuridico: 'JurÃ­dico',
+        typeJuridico: 'Jurídico',
         nombre: 'Nombre',
-        tabJuridicas: 'JurÃ­dicas',
+        tabJuridicas: 'Jurídicas',
         tabPersonasRelacionadas: 'Personas relacionadas',
-        tabCodigosCnae: 'CÃ³digos CNAE',
-        tabInformacionFiscalIae: 'InformaciÃ³n Fiscal / IAE',
+        tabCodigosCnae: 'Códigos CNAE',
+        tabInformacionFiscalIae: 'Información Fiscal / IAE',
         tabInformeCliente: 'Informe Cliente',
-        tabBancoEspana: 'Banco de EspaÃ±a',
+        tabBancoEspana: 'Banco de España',
         tabRegistroMercantil: 'Registro Mercantil',
-        situacionBe: 'SituaciÃ³n BE',
-        vinculacionAapp: 'VinculaciÃ³n AAPP',
+        situacionBe: 'Situación BE',
+        vinculacionAapp: 'Vinculación AAPP',
         sectorInstitucional: 'Sector Institucional',
-        provinciaInscripcion: 'Provincia de inscripciÃ³n',
-        fechaInscripcion: 'Fecha de inscripciÃ³n',
+        provinciaInscripcion: 'Provincia de inscripción',
+        fechaInscripcion: 'Fecha de inscripción',
         tomo: 'Tomo',
         folio: 'Folio',
         hoja: 'Hoja',
-        inscripcion: 'InscripciÃ³n',
-        tipoVia: 'Tipo de vÃ­a',
-        numero: 'NÃºmero',
+        inscripcion: 'Inscripción',
+        tipoVia: 'Tipo de vía',
+        numero: 'Número',
         planta: 'Planta',
         puerta: 'Puerta',
-        codigoPostal: 'CÃ³digo Postal'
+        codigoPostal: 'Código Postal'
       },
       nameInput: 'div[name="name"] input, h1 input[placeholder*="Lumber"], h1 input',
       informeCliente: {
@@ -98,14 +98,14 @@
       personasRelacionadasRows:
         'div[name="advisor_ids"] tr.o_data_row, div[name="representative_ids"] tr.o_data_row, div[name="related_person_ids"] tr.o_data_row, div[name="admin_ids"] tr.o_data_row',
       personasRelacionadasAddLineButton:
-        'div[name="advisor_ids"] a:has-text("Agregar"), div[name="advisor_ids"] a:has-text("AÃ±adir"), div[name="representative_ids"] a:has-text("Agregar"), div[name="representative_ids"] a:has-text("AÃ±adir"), div[name="related_person_ids"] a:has-text("Agregar"), div[name="related_person_ids"] a:has-text("AÃ±adir"), div[name="admin_ids"] a:has-text("Agregar"), div[name="admin_ids"] a:has-text("AÃ±adir")',
+        'div[name="advisor_ids"] a:has-text("Agregar"), div[name="advisor_ids"] a:has-text("Añadir"), div[name="representative_ids"] a:has-text("Agregar"), div[name="representative_ids"] a:has-text("Añadir"), div[name="related_person_ids"] a:has-text("Agregar"), div[name="related_person_ids"] a:has-text("Añadir"), div[name="admin_ids"] a:has-text("Agregar"), div[name="admin_ids"] a:has-text("Añadir")',
       personaRelacionadaInput:
         'td[name="partner_id"] input, td[name="rel_partner_id"] input, td[name="person_id"] input, td[name="nombre_completo"] input, td input[role="combobox"]',
       tipoVinculacionInput:
         'td[name="partner_vinculation_id"] input, td[name="vinculation_id"] input, td[name="cargo_id"] input, td[name="tipo"] input, td input[role="combobox"]',
       cnaeSelectedRow: 'div[name="cnae_ids"] tr.o_selected_row',
       cnaeAddLineButton:
-        'div[name="cnae_ids"] a:has-text("Agregar"), div[name="cnae_ids"] a:has-text("AÃ±adir"), div[name="cnae_ids"] button:has-text("Agregar"), div[name="cnae_ids"] button:has-text("AÃ±adir")',
+        'div[name="cnae_ids"] a:has-text("Agregar"), div[name="cnae_ids"] a:has-text("Añadir"), div[name="cnae_ids"] button:has-text("Agregar"), div[name="cnae_ids"] button:has-text("Añadir")',
       cnaeInput:
         'div[name="cnae_ids"] input[role="combobox"], div[name="cnae_ids"] .o_field_many2one input, div[name="cnae_ids"] input',
       cnaeCellInput: 'td[name="cnae_id"] input[role="combobox"], td[name="cnae_id"] input',
@@ -119,7 +119,7 @@
       iaeRows:
         'div[name="iae_ids"] tr.o_data_row, div[name="epigrafe_ids"] tr.o_data_row, div[name="iae_line_ids"] tr.o_data_row',
       iaeAddLineButton:
-        'div[name="iae_ids"] a:has-text("Agregar"), div[name="iae_ids"] a:has-text("AÃ±adir"), div[name="epigrafe_ids"] a:has-text("Agregar"), div[name="epigrafe_ids"] a:has-text("AÃ±adir"), div[name="iae_line_ids"] a:has-text("Agregar"), div[name="iae_line_ids"] a:has-text("AÃ±adir")',
+        'div[name="iae_ids"] a:has-text("Agregar"), div[name="iae_ids"] a:has-text("Añadir"), div[name="epigrafe_ids"] a:has-text("Agregar"), div[name="epigrafe_ids"] a:has-text("Añadir"), div[name="iae_line_ids"] a:has-text("Agregar"), div[name="iae_line_ids"] a:has-text("Añadir")',
       iaeEpigrafeInput:
         'td[name="iae_code_id"] input, td[name="epigrafe_id"] input, td[name="iae_id"] input, td[name="activity_id"] input, td input[role="combobox"]',
       iaePrincipalInput: 'td[name="principal"] input, td[name="is_primary"] input, input[type="radio"], input[type="checkbox"]',
@@ -151,5 +151,14 @@
         'input[id^="sheet"], div[name="sheet"] input, div[name="registry_sheet"] input, div[name="hoja"] input, div[name="registro_mercantil_hoja"] input, input[name="sheet"], input[name="registry_sheet"], input[name="hoja"]',
       inscripcionInput:
         'input[id^="inscription"], div[name="inscription"] input, div[name="registry_entry"] input, div[name="inscripcion"] input, div[name="registro_mercantil_inscripcion"] input, input[name="inscription"], input[name="registry_entry"], input[name="inscripcion"]'
+    },
+    bienes: {
+      rows:
+        'div[name="asset_ids"] tr.o_data_row, div[name="bien_ids"] tr.o_data_row, div[name="property_ids"] tr.o_data_row, div[name="owner_asset_ids"] tr.o_data_row',
+      viewButton:
+        'button:has-text("Ver bien"), a:has-text("Ver bien"), button:has-text("Ver Bien"), a:has-text("Ver Bien"), button[aria-label*="Ver"], a[aria-label*="Ver"]',
+      labels: {
+        tabBienes: 'Bienes'
+      }
     }
 } as const;

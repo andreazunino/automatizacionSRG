@@ -23,7 +23,26 @@ import type {
   ProductoFinancieroTestData,
   TipologiaProductoTestData
 } from '../fixtures/productos/productosData';
-import type { TipoBienTestData } from '../fixtures/bienes/tipoBienData';
+import type {
+  BienDocumentosTestData,
+  BienAgrupacionTestData,
+  BienCargaHistoricoTestData,
+  BienCargaHipotecariaTestData,
+  BienSinAgrupacionTestData,
+  BienBusquedaFiltrosTestData,
+  BienPrincipalTestData,
+  BienPropietariosExcesoTestData,
+  BienPropietariosFechasTestData,
+  BienPropietarioBajaTestData,
+  BienPropietariosTestData,
+  BienSeguridadCrudTestData,
+  BienTasacionManualTestData,
+  MotivoSolicitudTestData,
+  RegistroPropiedadTestData,
+  SolicitudTasacionDominiosTestData,
+  TipoBienTestData,
+  TipoCargaTestData
+} from '../fixtures/bienes/tipoBienData';
 import { ConfiguracionContactosPage } from '../pages/ConfiguracionContactosPage';
 import { ContactosPage } from '../pages/ContactosPage';
 import { LoginPage } from '../pages/LoginPage';
@@ -54,7 +73,24 @@ export class CustomWorld extends World {
   currentEmpresaInformeCliente?: EmpresaInformeClienteTestData;
   currentMaestroContactos?: MaestroContactosTestData;
   currentNaturalezaT4?: NaturalezaT4TestData;
+  currentBienDocumentos?: BienDocumentosTestData;
+  currentBienAgrupacion?: BienAgrupacionTestData;
+  currentBienCargaHistorico?: BienCargaHistoricoTestData;
+  currentBienCargaHipotecaria?: BienCargaHipotecariaTestData;
+  currentBienSinAgrupacion?: BienSinAgrupacionTestData;
+  currentBienBusquedaFiltros?: BienBusquedaFiltrosTestData;
+  currentBienPropietarios?: BienPropietariosTestData;
+  currentBienPropietariosExceso?: BienPropietariosExcesoTestData;
+  currentBienPropietariosFechas?: BienPropietariosFechasTestData;
+  currentBienPropietarioBaja?: BienPropietarioBajaTestData;
+  currentBienSeguridadCrud?: BienSeguridadCrudTestData;
+  currentBienTasacionManual?: BienTasacionManualTestData;
   currentTipoBien?: TipoBienTestData;
+  currentBienPrincipal?: BienPrincipalTestData;
+  currentTipoCarga?: TipoCargaTestData;
+  currentRegistroPropiedad?: RegistroPropiedadTestData;
+  currentMotivoSolicitud?: MotivoSolicitudTestData;
+  currentSolicitudTasacionDominios?: SolicitudTasacionDominiosTestData;
   currentEmpresaRegistroMercantil?: EmpresaRegistroMercantilTestData;
   currentEmpresaRepresentante?: EmpresaRepresentanteTestData;
   currentUnidadDecision?: UnidadDecisionTestData;
@@ -75,5 +111,6 @@ export class CustomWorld extends World {
 
 setWorldConstructor(CustomWorld);
 setDefaultTimeout(60000);
+
 
 

@@ -1,4 +1,4 @@
-import dotenv from 'dotenv';
+﻿import dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -34,6 +34,12 @@ export const env = {
   headless: parseBoolean(process.env.HEADLESS, true),
   actionUrls: {
     bienes: process.env.ACTION_BIENES || '/odoo/action-858',
+    tiposBienes: process.env.ACTION_TIPOS_BIENES || process.env.ACTION_BIENES_TIPOS || '',
+    bienesRegistro: process.env.ACTION_BIENES_REGISTRO || process.env.ACTION_BIENES || '/odoo/action-858',
+    registroPropiedad: process.env.ACTION_REGISTRO_PROPIEDAD || '/odoo/action-858',
+    tiposCarga: process.env.ACTION_TIPOS_CARGA || '/odoo/action-996',
+    motivosSolicitud: process.env.ACTION_MOTIVOS_SOLICITUD || '/odoo/action-994',
+    solicitudesTasacion: process.env.ACTION_SOLICITUDES_TASACION || '/odoo/action-993',
     formasJuridicas: process.env.ACTION_FORMAS_JURIDICAS || '/odoo/action-754',
     vinculaciones: process.env.ACTION_VINCULACIONES || '/odoo/action-880',
     unidadesDecision: process.env.ACTION_UNIDADES_DECISION || '/odoo/action-900',
@@ -46,3 +52,5 @@ export const env = {
 } as const;
 
 export type UserRole = keyof typeof env.credentials;
+
+

@@ -2,6 +2,10 @@ export const odooCommonSelectors = {
   newButton: 'button:has-text("Nuevo")',
   editButton: 'button:has-text("Editar")',
   saveButton: 'button[aria-label="Guardar manualmente"]:visible, button:has-text("Guardar"):visible',
+  discardButton:
+    'button[aria-label="Descartar todos los cambios"], button:has-text("Descartar"), button:has-text("Cancelar")',
+  confirmDiscardButton:
+    '.modal button:has-text("Descartar"), .modal button:has-text("Aceptar"), .modal button:has-text("Confirmar"), [role="dialog"] button:has-text("Descartar"), [role="dialog"] button:has-text("Aceptar")',
   actionButton:
     'button:has-text("Accion"), button:has-text("Acción"), button:has-text("Acciones"), .o_cp_action_menus button, button[aria-label*="Acci"]',
   archiveMenuItem:

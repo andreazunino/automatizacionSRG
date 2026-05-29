@@ -1,6 +1,6 @@
-# Alcance de automatización E2E
+# Alcance de automatizacion E2E
 
-Los escenarios Gherkin deben representar flujos de usuario validables desde la interfaz web. No se deben automatizar como casos E2E los escenarios que dependan principalmente de procesos técnicos, integraciones externas o funcionalidades no disponibles.
+Los escenarios Gherkin deben representar flujos de usuario validables desde la interfaz web. No se deben automatizar como casos E2E los escenarios que dependan principalmente de procesos tecnicos, integraciones externas o funcionalidades no disponibles.
 
 ## Modulo Productos
 
@@ -61,9 +61,16 @@ Los escenarios del modulo `bienes` estan en `tests/features/bienes/bienes.featur
 - Steps: `tests/steps/bienes.steps.ts`.
 - Selectores: `tests/utils/selectors/bienesSelectors.ts`.
 - Datos y factories: `tests/fixtures/bienes/tipoBienData.ts`.
-- URL configurable: `ACTION_BIENES`.
+- URL configurable para Tipo de Bienes: `ACTION_BIENES`.
+- URL configurable para Registro de Propiedad: `ACTION_REGISTRO_PROPIEDAD`.
+- URL configurable para Motivos de Solicitud: `ACTION_MOTIVOS_SOLICITUD` (`https://atlas-pruebas.odoo.com/odoo/action-994`).
 
 El caso `TC-001` valida crear, editar, archivar y activar un Tipo de Bienes desde la UI.
+El caso `TC-002` valida que `Descripcion` sea obligatorio en Tipo de Bienes.
+El caso `TC-003` valida crear, editar y archivar Registro de Propiedad, y rechazar el alta sin `Cod. Registro`.
+
+Observacion funcional de `TC-003`: al completar el campo `Observaciones`, que aparentemente admite contenido enriquecido, se observa que no se renderiza correctamente en la interfaz y muestra etiquetas HTML visibles al usuario. No forma parte de la validacion automatizada principal del CP.
+El caso `TC-005` valida Motivos de Solicitud usando `ACTION_MOTIVOS_SOLICITUD`: el campo secundario cambia sus opciones segun el Motivo, se limpia al modificarlo, y el Nombre completo se calcula dinamicamente.
 
 ## Estructura por modulo
 
@@ -126,14 +133,14 @@ npm run test:bienes -- --dry-run
 Los siguientes casos quedan fuera del alcance automatizable del framework:
 
 - Crons o acciones planificadas.
-- RPC o llamadas técnicas directas al servidor.
+- RPC o llamadas tecnicas directas al servidor.
 - APIs externas: Notariado, Experian, CIRBE, IdConfirma, SMTP/email y listas de sanciones externas.
 - Bugs activos que bloquean el caso de prueba.
 - Funcionalidades no implementadas.
 
-## Tags de exclusión
+## Tags de exclusion
 
-Si un escenario queda documentado temporalmente en un `.feature`, debe marcarse con alguno de estos tags para que Cucumber lo excluya automáticamente:
+Si un escenario queda documentado temporalmente en un `.feature`, debe marcarse con alguno de estos tags para que Cucumber lo excluya automaticamente:
 
 - `@no_automatizar`
 - `@cron`
@@ -146,9 +153,10 @@ Ejemplo:
 ```gherkin
 @api_externa @no_automatizar
 Escenario: Validar respuesta de Experian
-  Dado que existe una solicitud de evaluación crediticia
+  Dado que existe una solicitud de evaluacion crediticia
   Cuando se consulta Experian
-  Entonces debería registrarse la respuesta externa
+  Entonces deberia registrarse la respuesta externa
 ```
 
-Estos casos deben validarse por otra estrategia de prueba, como pruebas de integración, contract testing, mocks controlados, monitoreo operativo o validación manual asistida.
+Estos casos deben validarse por otra estrategia de prueba, como pruebas de integracion, contract testing, mocks controlados, monitoreo operativo o validacion manual asistida.
+

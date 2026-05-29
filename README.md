@@ -26,6 +26,8 @@ CONTACTS_URL=https://atlas-pruebas.odoo.com/odoo/contacts
 PRODUCTS_URL=https://atlas-pruebas.odoo.com/odoo/action-1194
 COMMISSION_PRODUCTS_URL=https://atlas-pruebas.odoo.com/odoo/action-1194
 ACTION_BIENES=https://atlas-pruebas.odoo.com/odoo/action-858
+ACTION_REGISTRO_PROPIEDAD=https://atlas-pruebas.odoo.com/odoo/action-858
+ACTION_MOTIVOS_SOLICITUD=https://atlas-pruebas.odoo.com/odoo/action-994
 ADMIN_USER=usuario_admin
 ADMIN_PASSWORD=password_admin
 INTERNAL_USER=usuario_interno
@@ -34,6 +36,8 @@ QA_USER=usuario_qa
 QA_PASSWORD=password_qa
 HEADLESS=true
 ```
+
+Para las pruebas con usuario interno estándar se usa `QA_USER`/`QA_PASSWORD`. Estas credenciales representan el usuario interno de QA, salvo que un escenario indique explícitamente otro rol.
 
 No se deben versionar credenciales reales ni URLs sensibles.
 
@@ -128,7 +132,7 @@ Ejemplo:
 
 ```gherkin
 # language: es
-Escenario: Crear persona física con datos completos
+Escenario: Crear persona fisica con datos completos
   Dado que inicio sesion en la aplicacion
   Y accedo al modulo Contactos
   Cuando creo una persona fisica con todos los campos de identidad

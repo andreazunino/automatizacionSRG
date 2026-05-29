@@ -1,13 +1,13 @@
 ﻿export const configuracionContactosSelectors = {
     menus: {
-      configuracion: 'ConfiguraciÃ³n',
-      formasJuridicas: 'Formas jurÃ­dicas',
-      vinculaciones: 'VÃ­nculos de socios',
-      tipologias: 'TipologÃ­a'
+      configuracion: 'Configuración',
+      formasJuridicas: 'Formas jurídicas',
+      vinculaciones: 'Vínculos de socios',
+      tipologias: 'Tipología'
     },
     labels: {
       nombre: 'Nombre',
-      codigo: 'CÃ³digo'
+      codigo: 'Código'
     },
     form: {
       saveButton: 'button[aria-label="Guardar manualmente"], button:has-text("Guardar")',
@@ -28,7 +28,7 @@
     rows: '.o_data_row, tbody tr',
     firstResult: '.o_data_row:first-child, tbody tr:first-child',
     duplicateValidationDialog:
-      '.modal:has-text("Error de validaciÃ³n"), .modal:has-text("duplic"), .o_dialog:has-text("Error de validaciÃ³n")',
+      '.modal:has-text("Error de validación"), .modal:has-text("duplic"), .o_dialog:has-text("Error de validación")',
     validationText:
       '.modal, .o_dialog, .o_notification, .o_notification_content, .invalid-feedback, .text-danger',
     dialogCloseButton: '.modal button:has-text("Cerrar"), .modal button:has-text("Aceptar"), .o_dialog button:has-text("Cerrar")'

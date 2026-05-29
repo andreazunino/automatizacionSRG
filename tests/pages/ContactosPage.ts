@@ -51,6 +51,51 @@ export class ContactosPage extends BasePage {
     await expect(this.page.locator(contactosSelectors.resultsTable)).toBeVisible();
   }
 
+  async openContactoByName(contactName: string): Promise<void> {
+    await this.navigateToContactos();
+    await this.searchContacto(contactName);
+
+    const row = this.page
+      .locator(contactosSelectors.resultsTable)
+      .locator(contactosSelectors.firstResult)
+      .filter({ hasText: new RegExp(this.escapeRegExp(contactName), 'i') })
+      .first();
+
+    if (await row.isVisible().catch(() => false)) {
+      await row.click();
+      return;
+    }
+
+    const fallbackRow = this.page.locator(contactosSelectors.resultsTable).locator('tbody tr, .o_data_row').filter({
+      hasText: new RegExp(this.escapeRegExp(contactName), 'i')
+    }).first();
+
+    await expect(fallbackRow).toBeVisible();
+    await fallbackRow.click();
+  }
+
+  async assertOwnerBienIsVisibleAndOpenIt(data: { bienDescripcion: string; porcentaje: string }): Promise<void> {
+    await this.openBienesTab();
+
+    const row = this.page
+      .locator(contactosSelectors.bienes.rows)
+      .filter({ hasText: new RegExp(this.escapeRegExp(data.bienDescripcion), 'i') })
+      .first();
+
+    await expect(row).toBeVisible();
+    await expect(row).toContainText(new RegExp(`${this.escapeRegExp(data.porcentaje)}(?:[,.]0+)?`));
+
+    const viewButton = row.locator(contactosSelectors.bienes.viewButton).first();
+
+    if (await viewButton.isVisible().catch(() => false)) {
+      await viewButton.click();
+    } else {
+      await row.click();
+    }
+
+    await expect(this.page).toHaveTitle(new RegExp(this.escapeRegExp(data.bienDescripcion), 'i'));
+  }
+
   async createPersonaFisica(persona: PersonaFisicaTestData): Promise<void> {
     await this.click(contactosSelectors.newButton);
     await this.page.getByRole('radio', { name: contactosSelectors.personaFisica.labels.typeFisico }).check();
@@ -168,7 +213,7 @@ export class ContactosPage extends BasePage {
   }
 
   async assertPaisNacimientoRequiredValidation(): Promise<void> {
-    await expect(this.page.getByText(/Pa[iÃ­]s de nacimiento es obligatorio/i)).toBeVisible();
+    await expect(this.page.getByText(/Pa[ií]s de nacimiento es obligatorio/i)).toBeVisible();
     await this.closeValidationDialogIfVisible();
     await this.openPersonasFisicasTab();
     await expect(this.paisNacimientoInput()).toHaveValue('');
@@ -183,7 +228,7 @@ export class ContactosPage extends BasePage {
   }
 
   async assertInvalidNifValidation(): Promise<void> {
-    await expect(this.page.getByText(/NIF no tiene un formato correcto|formato correcto|control es errÃ³neo/i)).toBeVisible();
+    await expect(this.page.getByText(/NIF no tiene un formato correcto|formato correcto|control es erróneo/i)).toBeVisible();
   }
 
   async savePersonaFisicaWithValidNif(persona: PersonaFisicaDocumentoTestData): Promise<void> {
@@ -248,7 +293,7 @@ export class ContactosPage extends BasePage {
     await expect(relacionRow).toContainText(empresa.nombreRepresentante);
     await expect(relacionRow).toContainText(empresa.tipoVinculacion);
 
-    // Discrepancia conocida de PER-024: la vista actual permite ediciÃ³n y no es readonly.
+    // Discrepancia conocida de PER-024: la vista actual permite edición y no es readonly.
     await expect(this.page.locator(contactosSelectors.empresa.personasRelacionadasAddLineButton).first()).toBeVisible();
   }
 
@@ -583,13 +628,13 @@ export class ContactosPage extends BasePage {
     await expect(searchOptionsPanel).toBeVisible();
     const predefinedFiltersText = ((await searchOptionsPanel.textContent()) ?? '').split('Filtro personalizado')[0];
 
-    expect(predefinedFiltersText).not.toMatch(/Tipolog[iÃ­]a/i);
+    expect(predefinedFiltersText).not.toMatch(/Tipolog[ií]a/i);
 
     return [
-      'PER-025: creaciÃ³n y asignaciÃ³n de tipologÃ­as verificada.',
-      `TipologÃ­a creada/asignada: ${data.tipologiaNueva.nombre}.`,
-      'LimitaciÃ³n documentada: en el listado de contactos no hay filtro directo/predefinido por tipologÃ­a.',
-      'La opciÃ³n solo aparece dentro de Filtro personalizado, por lo que no se valida el resultado esperado como filtro visible directo.'
+      'PER-025: creación y asignación de tipologías verificada.',
+      `Tipología creada/asignada: ${data.tipologiaNueva.nombre}.`,
+      'Limitación documentada: en el listado de contactos no hay filtro directo/predefinido por tipología.',
+      'La opción solo aparece dentro de Filtro personalizado, por lo que no se valida el resultado esperado como filtro visible directo.'
     ].join('\n');
   }
 
@@ -654,7 +699,7 @@ export class ContactosPage extends BasePage {
 
     const labelInput = this.page
       .locator(
-        'xpath=//*[contains(normalize-space(), "Actividad econÃ³mica")]/following::*[self::input and (@type="checkbox" or @type="radio")][1]'
+        'xpath=//*[contains(normalize-space(), "Actividad económica")]/following::*[self::input and (@type="checkbox" or @type="radio")][1]'
       )
       .first();
 
@@ -864,7 +909,7 @@ export class ContactosPage extends BasePage {
         return;
       }
 
-      throw new Error(`No se encontrÃ³ el valor "${value}" en Registro Mercantil.`);
+      throw new Error(`No se encontró el valor "${value}" en Registro Mercantil.`);
     }
   }
 
@@ -877,7 +922,7 @@ export class ContactosPage extends BasePage {
     await this.fillFechaNacimiento('01/01/1990');
     await this.page.keyboard.press('Escape');
     await this.fillAutocompleteTextbox(contactosSelectors.personaFisica.labels.sexo, 'Hombre');
-    await this.fillAutocompleteCombobox(contactosSelectors.personaFisica.labels.paisNacimiento, 'EspaÃ±a');
+    await this.fillAutocompleteCombobox(contactosSelectors.personaFisica.labels.paisNacimiento, 'España');
     await this.saveCurrentContact();
   }
 
@@ -1010,7 +1055,7 @@ export class ContactosPage extends BasePage {
         return;
       }
 
-      throw new Error(`No se encontrÃ³ el valor "${value}" en el campo ${accessibleName}.`);
+      throw new Error(`No se encontró el valor "${value}" en el campo ${accessibleName}.`);
     }
   }
 
@@ -1055,7 +1100,7 @@ export class ContactosPage extends BasePage {
 
     await expect
       .poll(async () => (await this.iaeValues()).some((value) => codePattern.test(value)), {
-        message: `Esperaba encontrar el epÃ­grafe ${epigrafeCode} en la grilla IAE`
+        message: `Esperaba encontrar el epígrafe ${epigrafeCode} en la grilla IAE`
       })
       .toBeTruthy();
 
@@ -1419,7 +1464,7 @@ export class ContactosPage extends BasePage {
         return;
       }
 
-      throw new Error(`No se encontrÃ³ el valor "${value}" en el catÃ¡logo de Banco de EspaÃ±a.`);
+      throw new Error(`No se encontró el valor "${value}" en el catálogo de Banco de España.`);
     }
   }
 
@@ -1428,7 +1473,7 @@ export class ContactosPage extends BasePage {
 
     if (await errorDialog.isVisible()) {
       const errorText = ((await errorDialog.textContent()) ?? '').trim();
-      throw new Error(`La aplicaciÃ³n mostrÃ³ un error inesperado: ${errorText}`);
+      throw new Error(`La aplicación mostró un error inesperado: ${errorText}`);
     }
   }
 
@@ -1567,7 +1612,7 @@ export class ContactosPage extends BasePage {
 
   private tipologiaInput(): Locator {
     const configuredInput = this.page.locator(tipologiasSelectors.tagInput).first();
-    const labelledInput = this.page.getByRole('combobox', { name: /Etiquetas|Tipolog[iÃ­]a|Categor[iÃ­]as/i }).first();
+    const labelledInput = this.page.getByRole('combobox', { name: /Etiquetas|Tipolog[ií]a|Categor[ií]as/i }).first();
 
     return configuredInput.or(labelledInput).first();
   }
@@ -1614,7 +1659,7 @@ export class ContactosPage extends BasePage {
     const pageText = (await this.page.locator('body').textContent()) ?? '';
     const text = [...validationText, pageText].join(' ');
 
-    return /fecha de inscripci[oÃ³]n|inscripci[oÃ³]n/i.test(text) && /futura|mayor|actual|posterior/i.test(text);
+    return /fecha de inscripci[oó]n|inscripci[oó]n/i.test(text) && /futura|mayor|actual|posterior/i.test(text);
   }
 
   private paisNacimientoInput(): Locator {
@@ -1679,6 +1724,15 @@ export class ContactosPage extends BasePage {
     await this.page.getByRole('tab', { name: contactosSelectors.empresa.labels.tabInformeCliente }).click();
   }
 
+  private async openBienesTab(): Promise<void> {
+    const tab = this.page.getByRole('tab', {
+      name: new RegExp(this.escapeRegExp(contactosSelectors.bienes.labels.tabBienes), 'i')
+    }).first();
+
+    await expect(tab).toBeVisible();
+    await tab.click();
+  }
+
   private async fillInformeClienteField(
     field: keyof typeof contactosSelectors.empresa.informeCliente,
     value: string
@@ -1718,7 +1772,7 @@ export class ContactosPage extends BasePage {
 
   private async saveExpectingValidationError(): Promise<void> {
     await this.clickSaveExpectingValidation();
-    await expect(this.page.getByText(/Error de validaciÃ³n/i)).toBeVisible();
+    await expect(this.page.getByText(/Error de validación/i)).toBeVisible();
   }
 
   private async clickSaveExpectingValidation(): Promise<void> {
@@ -1744,7 +1798,7 @@ export class ContactosPage extends BasePage {
 
     const validationDialog = this.page
       .locator('.modal, [role="dialog"]')
-      .filter({ hasText: /Error de validaciÃƒÂ³n|validaciÃƒÂ³n/i })
+      .filter({ hasText: /Error de validación|validación/i })
       .first();
     const validationMessage = this.page.locator(commonSelectors.validationMessage).first();
 
@@ -1810,7 +1864,7 @@ export class ContactosPage extends BasePage {
         }
 
         const dialogText = await this.visibleDialogText();
-        throw new Error(`La aplicaciÃ³n mostrÃ³ un error tÃ©cnico al guardar el contacto.${dialogText ? ` ${dialogText}` : ''}`);
+        throw new Error(`La aplicación mostró un error técnico al guardar el contacto.${dialogText ? ` ${dialogText}` : ''}`);
       }
       if (error instanceof Error && /element is not visible/i.test(error.message)) {
         await expect(this.page).not.toHaveURL(/\/new(?:$|[/?#])/, { timeout: 30000 });

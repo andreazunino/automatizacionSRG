@@ -33,7 +33,7 @@ export class ConfiguracionContactosPage extends BasePage {
 
   async assertDuplicatedFormaJuridicaWasRejected(): Promise<void> {
     await expect(this.page.locator(configuracionContactosSelectors.validationText).first()).toContainText(
-      /duplic|existe|unique|[uÃº]nico|ya existe|c[oÃ³]digo/i
+      /duplic|existe|unique|[uú]nico|ya existe|c[oó]digo/i
     );
     await this.closeValidationDialogIfVisible();
     await this.discardCurrentMasterIfNeeded();
@@ -123,7 +123,7 @@ export class ConfiguracionContactosPage extends BasePage {
       .click();
     await this.page
       .locator('a, button, [role="menuitem"]')
-      .filter({ hasText: /Tipolog[iÃ­]a|Tipologias|TipologÃ­as/i })
+      .filter({ hasText: /Tipolog[ií]a|Tipologias|Tipologías/i })
       .first()
       .click();
     await expect(this.page.locator(contactosSelectors.newButton)).toBeVisible();

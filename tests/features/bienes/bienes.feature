@@ -129,7 +129,7 @@ Característica: Gestion de bienes
     Cuando doy de baja una carga vigente de un Bien
     Entonces deberia visualizar la carga en historico y no en vigentes
 
-  @tc-035
+  @tc-035 @rpc @no_automatizar
   Escenario: Verificar que los importes de carga no admiten valores negativos
     Dado que inicio sesion en la aplicacion
     Cuando valido que los importes de carga no admiten valores negativos
@@ -155,32 +155,32 @@ Característica: Gestion de bienes
     Cuando valido acceso CRUD completo de Bienes con usuario interno estandar
     Entonces deberia quedar validado el acceso CRUD completo al modulo Bienes
 
-  @tc-030
+  @tc-030 @rpc @no_automatizar
   Escenario: Crear una tasacion manual en un Bien y verificar asignacion de secuencia
     # Observacion funcional: se omiten Tipo Tasacion R y Tipo de Valoracion porque no se encontraron en Odoo.
     Dado que inicio sesion en la aplicacion
     Cuando creo una tasacion manual en un Bien y verifico su secuencia
     Entonces deberia quedar validada la tasacion manual con secuencia y ultima tasacion actualizada
 
-  @tc-031
+  @tc-031 @rpc @no_automatizar
   Escenario: Copiar una tasacion existente mediante el campo Tasada en Garantia
     Dado que inicio sesion en la aplicacion
     Cuando copio una tasacion existente mediante Tasada en Garantia y modifico el valor
     Entonces deberia quedar validada la tasacion copiada desde Tasada en Garantia
 
-  @tc-032
+  @tc-032 @rpc @no_automatizar
   Escenario: Verificar campos No Tasable y No Valorar con justificacion
     Dado que inicio sesion en la aplicacion
     Cuando valido No Tasable No Valorar y No declarable al BDE en una tasacion
     Entonces deberia quedar validada la persistencia de No Tasable No Valorar y No declarable al BDE
 
-  @tc-033
+  @tc-033 @rpc @no_automatizar
   Escenario: Workflow completo de Solicitud de Tasacion
     Dado que inicio sesion en la aplicacion
     Cuando ejecuto el workflow completo de una Solicitud de Tasacion
     Entonces deberia quedar validado el workflow completo de Solicitud de Tasacion
 
-  @tc-034
+  @tc-034 @rpc @api_externa @no_automatizar
   Escenario: Validaciones al enviar mail de solicitud tasadora sin email y estado incorrecto
     # Requiere usuario QA admin por permisos del metodo de envio de mail.
     Dado que inicio sesion como administrador

@@ -22,6 +22,7 @@ import type {
   MotivoSolicitudTestData,
   RegistroPropiedadTestData,
   SolicitudTasacionDominiosTestData,
+  SolicitudTasacionMailValidationTestData,
   SolicitudTasacionWorkflowTestData,
   TipoBienTestData,
   TipoCargaItemTestData,
@@ -594,6 +595,29 @@ export class BienesPage extends BasePage {
     await this.assertSendMailButtonIsNotVisible();
   }
 
+  async validateAppraisalRequestMailSendingRules(
+    data: SolicitudTasacionMailValidationTestData
+  ): Promise<void> {
+    const asset = await this.firstOdooRecord<{ id: number; display_name: string }>('atlas.assets', []);
+
+    if (!asset) {
+      throw new Error('No se encontro un Bien existente para crear la Solicitud de Tasacion.');
+    }
+
+    const appraiserId = await this.createValuerWithoutEmail(data.tasadoraSinEmail);
+    const request = await this.createAppraisalRequest(asset.id, data, appraiserId);
+
+    await this.assertAppraisalRequestState(request.id, data.estadoSolicitada);
+    await this.expectAppraisalRequestMailError(request.id, /email|correo|tasadora|configurado/i);
+    await this.assertAppraisalRequestState(request.id, data.estadoSolicitada);
+
+    await this.writePartner(appraiserId, { email: data.emailTasadora });
+    await this.sendAppraisalRequestMail(request.id);
+    await this.assertAppraisalRequestState(request.id, data.estadoEnviada);
+    await this.openAppraisalRequestRecord(request.id);
+    await this.assertSendMailButtonIsNotVisible();
+  }
+
   async validateTasacionTitularAndTasadoraDomains(data: SolicitudTasacionDominiosTestData): Promise<void> {
     await this.navigateToBienesRegistro();
     await this.createBienPrincipal(data.bien);
@@ -1140,17 +1164,20 @@ export class BienesPage extends BasePage {
 
   private async createAppraisalRequest(
     assetId: number,
-    data: SolicitudTasacionWorkflowTestData
+    data: SolicitudTasacionWorkflowTestData | SolicitudTasacionMailValidationTestData,
+    appraiserOverrideId?: number
   ): Promise<AppraisalRequestRecord> {
     const holder = await this.firstOdooRecord<{ id: number; display_name: string }>('res.partner', [
       ['display_name', 'ilike', data.titular],
       ['atlas_is_valuer', '!=', true]
     ]);
-    const appraiser = await this.firstOdooRecord<{ id: number; display_name: string }>('res.partner', [
-      ['display_name', 'ilike', data.tasadora],
-      ['atlas_is_valuer', '=', true],
-      ['email', '!=', false]
-    ]);
+    const appraiser = appraiserOverrideId
+      ? { id: appraiserOverrideId, display_name: 'Tasadora temporal' }
+      : await this.firstOdooRecord<{ id: number; display_name: string }>('res.partner', [
+          ['display_name', 'ilike', 'tasadora' in data ? data.tasadora : data.tasadoraSinEmail],
+          ['atlas_is_valuer', '=', true],
+          ['email', '!=', false]
+        ]);
     const reason = await this.firstOdooRecord<{ id: number; display_name: string }>(
       'atlas.assets.appraisal.reason.type',
       []
@@ -1161,7 +1188,8 @@ export class BienesPage extends BasePage {
     }
 
     if (!appraiser) {
-      throw new Error(`No se encontro tasadora con email configurado para Solicitud de Tasacion: ${data.tasadora}.`);
+      const appraiserName = 'tasadora' in data ? data.tasadora : data.tasadoraSinEmail;
+      throw new Error(`No se encontro tasadora con email configurado para Solicitud de Tasacion: ${appraiserName}.`);
     }
 
     if (!reason) {
@@ -1179,6 +1207,43 @@ export class BienesPage extends BasePage {
     const [request] = await this.readAppraisalRequests([requestId]);
 
     return request;
+  }
+
+  private async createValuerWithoutEmail(name: string): Promise<number> {
+    return this.odooCallKw<number>('res.partner', 'create', [
+      {
+        name,
+        atlas_is_valuer: true,
+        email: false
+      }
+    ]);
+  }
+
+  private async writePartner(partnerId: number, values: Record<string, unknown>): Promise<void> {
+    const updated = await this.odooCallKw<boolean>('res.partner', 'write', [[partnerId], values]);
+
+    expect(updated).toBe(true);
+  }
+
+  private async sendAppraisalRequestMail(requestId: number): Promise<void> {
+    await this.odooCallKw<unknown>('atlas.assets.appraisal.request', 'action_send_appraisal_request_mail', [
+      [requestId]
+    ]);
+  }
+
+  private async expectAppraisalRequestMailError(requestId: number, expectedMessage: RegExp): Promise<void> {
+    await expect
+      .poll(async () => {
+        try {
+          await this.sendAppraisalRequestMail(requestId);
+          return '';
+        } catch (error) {
+          return error instanceof Error ? error.message : String(error);
+        }
+      }, {
+        message: 'Esperaba error al enviar mail de Solicitud de Tasacion.'
+      })
+      .toMatch(expectedMessage);
   }
 
   private async transitionAppraisalRequest(requestId: number, state: string): Promise<void> {

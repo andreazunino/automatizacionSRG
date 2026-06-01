@@ -204,6 +204,15 @@ export interface SolicitudTasacionWorkflowTestData {
   estadoConfirmado: string;
 }
 
+export interface SolicitudTasacionMailValidationTestData {
+  bien: BienPrincipalTestData;
+  titular: string;
+  tasadoraSinEmail: string;
+  emailTasadora: string;
+  estadoSolicitada: string;
+  estadoEnviada: string;
+}
+
 export interface BienSeguridadCrudTestData {
   bien: BienPrincipalTestData;
   tipoBien: TipoBienTestData;
@@ -549,6 +558,19 @@ export const createSolicitudTasacionWorkflowTestData = (): SolicitudTasacionWork
     estadoEnviada: 'enviada',
     estadoDocRecibido: 'doc_recibido',
     estadoConfirmado: 'confirmado'
+  };
+};
+
+export const createSolicitudTasacionMailValidationTestData = (): SolicitudTasacionMailValidationTestData => {
+  const suffix = uniqueSuffix();
+
+  return {
+    bien: createBienPrincipalTestData(),
+    titular: 'Juan García',
+    tasadoraSinEmail: `Tasadora Sin Email ${suffix}`,
+    emailTasadora: `tasadora.sin.email.${suffix}@example.com`,
+    estadoSolicitada: 'solicitada',
+    estadoEnviada: 'enviada'
   };
 };
 

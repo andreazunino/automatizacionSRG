@@ -10,3 +10,4 @@ videos/*
 !videos/.gitkeep
 screenshots/*
 !screenshots/.gitkeep
+.claude

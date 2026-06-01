@@ -17,6 +17,7 @@ import {
   createBienTasacionJustificacionesTestData,
   createBienTasacionManualTestData,
   createSolicitudTasacionDominiosTestData,
+  createSolicitudTasacionMailValidationTestData,
   createSolicitudTasacionWorkflowTestData,
   createMotivoSolicitudTestData,
   createRegistroPropiedadTestData,
@@ -152,6 +153,15 @@ When('valido dominios de Titular y Tasadora en una Solicitud de Tasacion', async
 When('ejecuto el workflow completo de una Solicitud de Tasacion', async function (this: CustomWorld) {
   this.currentSolicitudTasacionWorkflow = createSolicitudTasacionWorkflowTestData();
   await this.bienesPage.validateAppraisalRequestFullWorkflow(this.currentSolicitudTasacionWorkflow);
+});
+
+When('valido el envio de mail de Solicitud de Tasacion con tasadora sin email', async function (
+  this: CustomWorld
+) {
+  this.currentSolicitudTasacionMailValidation = createSolicitudTasacionMailValidationTestData();
+  await this.bienesPage.validateAppraisalRequestMailSendingRules(
+    this.currentSolicitudTasacionMailValidation
+  );
 });
 
 When('preparo un Bien con propietario y abro la ficha del Contacto propietario', async function (
@@ -434,6 +444,18 @@ Then('deberia quedar validado el workflow completo de Solicitud de Tasacion', as
 
   await this.attach(
     `Workflow validado hasta estado ${this.currentSolicitudTasacionWorkflow.estadoConfirmado}.`,
+    'text/plain'
+  );
+});
+Then('deberia quedar validada la regla de envio de mail de Solicitud de Tasacion', async function (
+  this: CustomWorld
+) {
+  if (!this.currentSolicitudTasacionMailValidation) {
+    throw new Error('No existen datos de validacion de envio de mail de Solicitud de Tasacion.');
+  }
+
+  await this.attach(
+    `Envio de mail validado para ${this.currentSolicitudTasacionMailValidation.tasadoraSinEmail}.`,
     'text/plain'
   );
 });

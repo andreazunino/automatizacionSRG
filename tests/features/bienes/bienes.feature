@@ -179,3 +179,10 @@ Característica: Gestion de bienes
     Dado que inicio sesion en la aplicacion
     Cuando ejecuto el workflow completo de una Solicitud de Tasacion
     Entonces deberia quedar validado el workflow completo de Solicitud de Tasacion
+
+  @tc-034
+  Escenario: Validaciones al enviar mail de solicitud tasadora sin email y estado incorrecto
+    # Requiere usuario QA admin por permisos del metodo de envio de mail.
+    Dado que inicio sesion como administrador
+    Cuando valido el envio de mail de Solicitud de Tasacion con tasadora sin email
+    Entonces deberia quedar validada la regla de envio de mail de Solicitud de Tasacion

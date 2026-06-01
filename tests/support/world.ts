@@ -43,6 +43,7 @@ import type {
   MotivoSolicitudTestData,
   RegistroPropiedadTestData,
   SolicitudTasacionDominiosTestData,
+  SolicitudTasacionMailValidationTestData,
   SolicitudTasacionWorkflowTestData,
   TipoBienTestData,
   TipoCargaTestData
@@ -98,6 +99,7 @@ export class CustomWorld extends World {
   currentRegistroPropiedad?: RegistroPropiedadTestData;
   currentMotivoSolicitud?: MotivoSolicitudTestData;
   currentSolicitudTasacionDominios?: SolicitudTasacionDominiosTestData;
+  currentSolicitudTasacionMailValidation?: SolicitudTasacionMailValidationTestData;
   currentSolicitudTasacionWorkflow?: SolicitudTasacionWorkflowTestData;
   currentEmpresaRegistroMercantil?: EmpresaRegistroMercantilTestData;
   currentEmpresaRepresentante?: EmpresaRepresentanteTestData;

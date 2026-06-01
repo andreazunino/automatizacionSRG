@@ -120,6 +120,8 @@ npx cucumber-js tests/features/productos/productos.feature --tags "@lin-006"
 
 Antes de ejecutar contra Odoo, validar que las URLs de acciones y credenciales del entorno correspondan al usuario/rol requerido por cada escenario.
 
+Observacion funcional de `TC-030`: la automatizacion de la tasacion manual omite los campos `Tipo Tasacion: R` y `Tipo de Valoracion`, porque no se encontraron en la vista de Odoo al realizar la validacion manual. El caso valida el alta con fecha valor, fecha caducidad, valor, Cumple ECO, tasadora, metodo de tasacion, secuencia generada y actualizacion de ultima tasacion.
+
 Dry-run por scripts:
 
 ```bash

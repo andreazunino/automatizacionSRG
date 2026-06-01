@@ -28,6 +28,7 @@ import type {
   BienAgrupacionTestData,
   BienCargaHistoricoTestData,
   BienCargaHipotecariaTestData,
+  BienCargaImportesNegativosTestData,
   BienSinAgrupacionTestData,
   BienBusquedaFiltrosTestData,
   BienPrincipalTestData,
@@ -36,10 +37,13 @@ import type {
   BienPropietarioBajaTestData,
   BienPropietariosTestData,
   BienSeguridadCrudTestData,
+  BienTasacionGarantiaTestData,
+  BienTasacionJustificacionesTestData,
   BienTasacionManualTestData,
   MotivoSolicitudTestData,
   RegistroPropiedadTestData,
   SolicitudTasacionDominiosTestData,
+  SolicitudTasacionWorkflowTestData,
   TipoBienTestData,
   TipoCargaTestData
 } from '../fixtures/bienes/tipoBienData';
@@ -77,6 +81,7 @@ export class CustomWorld extends World {
   currentBienAgrupacion?: BienAgrupacionTestData;
   currentBienCargaHistorico?: BienCargaHistoricoTestData;
   currentBienCargaHipotecaria?: BienCargaHipotecariaTestData;
+  currentBienCargaImportesNegativos?: BienCargaImportesNegativosTestData;
   currentBienSinAgrupacion?: BienSinAgrupacionTestData;
   currentBienBusquedaFiltros?: BienBusquedaFiltrosTestData;
   currentBienPropietarios?: BienPropietariosTestData;
@@ -85,12 +90,15 @@ export class CustomWorld extends World {
   currentBienPropietarioBaja?: BienPropietarioBajaTestData;
   currentBienSeguridadCrud?: BienSeguridadCrudTestData;
   currentBienTasacionManual?: BienTasacionManualTestData;
+  currentBienTasacionGarantia?: BienTasacionGarantiaTestData;
+  currentBienTasacionJustificaciones?: BienTasacionJustificacionesTestData;
   currentTipoBien?: TipoBienTestData;
   currentBienPrincipal?: BienPrincipalTestData;
   currentTipoCarga?: TipoCargaTestData;
   currentRegistroPropiedad?: RegistroPropiedadTestData;
   currentMotivoSolicitud?: MotivoSolicitudTestData;
   currentSolicitudTasacionDominios?: SolicitudTasacionDominiosTestData;
+  currentSolicitudTasacionWorkflow?: SolicitudTasacionWorkflowTestData;
   currentEmpresaRegistroMercantil?: EmpresaRegistroMercantilTestData;
   currentEmpresaRepresentante?: EmpresaRepresentanteTestData;
   currentUnidadDecision?: UnidadDecisionTestData;

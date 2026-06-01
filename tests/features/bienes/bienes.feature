@@ -129,6 +129,12 @@ Característica: Gestion de bienes
     Cuando doy de baja una carga vigente de un Bien
     Entonces deberia visualizar la carga en historico y no en vigentes
 
+  @tc-035
+  Escenario: Verificar que los importes de carga no admiten valores negativos
+    Dado que inicio sesion en la aplicacion
+    Cuando valido que los importes de carga no admiten valores negativos
+    Entonces deberia quedar validada la restriccion de importes negativos en cargas
+
   @tc-027
   Escenario: Crear Solicitud de Tasacion y verificar dominios de Titular y Tasadora
     # Observacion funcional: al buscar valores fuera de dominio aparece "No hay registros"; al guardar,
@@ -151,7 +157,25 @@ Característica: Gestion de bienes
 
   @tc-030
   Escenario: Crear una tasacion manual en un Bien y verificar asignacion de secuencia
-    # Observacion funcional: en la prueba manual no se encontraron los campos Tipo Tasacion R ni Tipo de Valoracion.
+    # Observacion funcional: se omiten Tipo Tasacion R y Tipo de Valoracion porque no se encontraron en Odoo.
     Dado que inicio sesion en la aplicacion
     Cuando creo una tasacion manual en un Bien y verifico su secuencia
     Entonces deberia quedar validada la tasacion manual con secuencia y ultima tasacion actualizada
+
+  @tc-031
+  Escenario: Copiar una tasacion existente mediante el campo Tasada en Garantia
+    Dado que inicio sesion en la aplicacion
+    Cuando copio una tasacion existente mediante Tasada en Garantia y modifico el valor
+    Entonces deberia quedar validada la tasacion copiada desde Tasada en Garantia
+
+  @tc-032
+  Escenario: Verificar campos No Tasable y No Valorar con justificacion
+    Dado que inicio sesion en la aplicacion
+    Cuando valido No Tasable No Valorar y No declarable al BDE en una tasacion
+    Entonces deberia quedar validada la persistencia de No Tasable No Valorar y No declarable al BDE
+
+  @tc-033
+  Escenario: Workflow completo de Solicitud de Tasacion
+    Dado que inicio sesion en la aplicacion
+    Cuando ejecuto el workflow completo de una Solicitud de Tasacion
+    Entonces deberia quedar validado el workflow completo de Solicitud de Tasacion

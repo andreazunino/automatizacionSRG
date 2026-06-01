@@ -4,6 +4,7 @@ import type {
   BienAgrupacionTestData,
   BienCargaHistoricoTestData,
   BienCargaHipotecariaTestData,
+  BienCargaImportesNegativosTestData,
   BienDocumentosTestData,
   BienSinAgrupacionTestData,
   BienBusquedaFiltrosTestData,
@@ -14,11 +15,14 @@ import type {
   BienPropietariosFechasTestData,
   BienPropietariosTestData,
   BienSeguridadCrudTestData,
+  BienTasacionGarantiaTestData,
+  BienTasacionJustificacionesTestData,
   BienTasacionManualTestData,
   MotivoSolicitudItemTestData,
   MotivoSolicitudTestData,
   RegistroPropiedadTestData,
   SolicitudTasacionDominiosTestData,
+  SolicitudTasacionWorkflowTestData,
   TipoBienTestData,
   TipoCargaItemTestData,
   TipoCargaTestData
@@ -27,7 +31,53 @@ import { env } from '../support/env';
 import { bienesSelectors } from '../utils/selectors/bienesSelectors';
 import { BasePage } from './BasePage';
 
+type AppraisalMany2One = [number, string] | false;
+
+interface AppraisalRecord {
+  id: number;
+  name: string;
+  appraisal_origin: string | false;
+  appraised_as_warranty: AppraisalMany2One;
+  date_value: string | false;
+  date_expired: string | false;
+  value: number;
+  eco_check: boolean;
+  not_appraised: boolean;
+  not_appraised_text: string | false;
+  not_valued: boolean;
+  not_valued_text: string | false;
+  not_declare_to_be: boolean;
+  appraiser_id: AppraisalMany2One;
+  method_appraiser_id: AppraisalMany2One;
+}
+
+interface AppraisalRequestRecord {
+  id: number;
+  name: string | false;
+  holder_id: AppraisalMany2One;
+  asset_id: AppraisalMany2One;
+  appraiser_id: AppraisalMany2One;
+  reason: AppraisalMany2One;
+  state: string;
+}
+
+interface EncumbranceRecord {
+  id: number;
+  description: string;
+  mortgage_main_liability: number;
+  principal_amount: number;
+  ordinary_interest_amount: number;
+  delay_interest_amount: number;
+  expenses_amount: number;
+  total_mortgage_main_liability: number;
+}
+
 export class BienesPage extends BasePage {
+  private manualAppraisalId?: number;
+  private manualAppraisalName?: string;
+  private manualAppraiserName?: string;
+  private manualAppraisalMethodName?: string;
+
   constructor(page: Page) {
     super(page);
   }
@@ -447,13 +497,101 @@ export class BienesPage extends BasePage {
     await this.assertHistoricalChargeVisible(data.descripcion, data.fechaBaja);
   }
 
+  async validateMortgageChargeAmountsRejectNegativeValues(
+    data: BienCargaImportesNegativosTestData
+  ): Promise<void> {
+    await this.navigateToBienesRegistro();
+    await this.createBienPrincipal(data.bien);
+    const assetId = this.currentRecordIdFromUrl();
+
+    await this.expectNegativeEncumbranceAmountValidation(assetId, data, {
+      mortgage_main_liability: Number(data.responsabilidadHipotecariaNegativa)
+    });
+    await this.expectNegativeEncumbranceAmountValidation(assetId, data, {
+      principal_amount: Number(data.importePrincipalNegativo)
+    });
+
+    const encumbrance = await this.createPositiveEncumbrance(assetId, data);
+
+    expect(encumbrance.total_mortgage_main_liability.toString()).toBe(Number(data.totalEsperado).toString());
+    await this.openCurrentBienRecord(assetId, data.bien.descripcion);
+    await this.assertMortgageChargeTotal(data.descripcion, data.totalEsperado);
+  }
+
   async createManualAppraisalAndValidateSequence(data: BienTasacionManualTestData): Promise<void> {
     await this.navigateToBienesRegistro();
     await this.createBienPrincipal(data.bien);
-    await this.openTasacionesTab();
-    await this.addManualAppraisal(data);
-    await this.saveCurrentTipoBien();
+    const assetId = this.currentRecordIdFromUrl();
+
+    await this.createManualAppraisalViaRpc(assetId, data);
+    await this.openCurrentBienRecord(assetId, data.bien.descripcion);
     await this.assertManualAppraisalWasCreated(data);
+  }
+
+  async copyAppraisalFromWarrantyAndValidate(data: BienTasacionGarantiaTestData): Promise<void> {
+    await this.navigateToBienesRegistro();
+    await this.createBienPrincipal(data.tasacionOrigen.bien);
+    const assetId = this.currentRecordIdFromUrl();
+
+    await this.createManualAppraisalViaRpc(assetId, data.tasacionOrigen);
+    const sourceAppraisal = await this.currentManualAppraisalRecord();
+    const copiedAppraisal = await this.createImportedAppraisalFromWarranty(sourceAppraisal, data.valorModificado);
+
+    await this.openCurrentBienRecord(assetId, data.tasacionOrigen.bien.descripcion);
+    await this.assertCopiedWarrantyAppraisal(sourceAppraisal, copiedAppraisal, data.valorModificado);
+    await this.assertAppraisalCannotReferenceItself(copiedAppraisal.id);
+  }
+
+  async validateAppraisalNotAppraisedAndNotValuedFields(
+    data: BienTasacionJustificacionesTestData
+  ): Promise<void> {
+    await this.navigateToBienesRegistro();
+    await this.createBienPrincipal(data.tasacion.bien);
+    const assetId = this.currentRecordIdFromUrl();
+
+    await this.createManualAppraisalViaRpc(assetId, data.tasacion);
+    const appraisal = await this.currentManualAppraisalRecord();
+
+    await this.writeAppraisal(appraisal.id, {
+      not_appraised: true,
+      not_appraised_text: false
+    });
+    await this.assertNotAppraisedCanBeSavedWithoutRequiredText(appraisal.id);
+
+    await this.writeAppraisal(appraisal.id, {
+      not_appraised_text: data.justificacionNoTasable
+    });
+    await this.assertNotAppraisedTextPersisted(appraisal.id, data.justificacionNoTasable);
+
+    await this.writeAppraisal(appraisal.id, {
+      not_appraised: false,
+      not_valued: true,
+      not_valued_text: data.justificacionNoValorar,
+      not_declare_to_be: true
+    });
+
+    await this.openCurrentBienRecord(assetId, data.tasacion.bien.descripcion);
+    await this.assertNotValuedAndNotDeclareToBePersisted(appraisal.id, data.justificacionNoValorar);
+  }
+
+  async validateAppraisalRequestFullWorkflow(data: SolicitudTasacionWorkflowTestData): Promise<void> {
+    await this.navigateToBienesRegistro();
+    await this.createBienPrincipal(data.bien);
+    const assetId = this.currentRecordIdFromUrl();
+    const request = await this.createAppraisalRequest(assetId, data);
+
+    await this.assertAppraisalRequestState(request.id, data.estadoInicial);
+    await this.transitionAppraisalRequest(request.id, data.estadoEnviada);
+    await this.assertAppraisalRequestState(request.id, data.estadoEnviada);
+    await this.openAppraisalRequestRecord(request.id);
+    await this.assertSendMailButtonIsNotVisible();
+
+    await this.transitionAppraisalRequest(request.id, data.estadoDocRecibido);
+    await this.assertAppraisalRequestState(request.id, data.estadoDocRecibido);
+
+    await this.transitionAppraisalRequest(request.id, data.estadoConfirmado);
+    await this.assertAppraisalRequestState(request.id, data.estadoConfirmado);
+    await this.assertSendMailButtonIsNotVisible();
   }
 
   async validateTasacionTitularAndTasadoraDomains(data: SolicitudTasacionDominiosTestData): Promise<void> {
@@ -542,6 +680,11 @@ export class BienesPage extends BasePage {
     await this.goto(env.actionUrls.solicitudesTasacion);
     await expect(this.page).toHaveTitle(bienesSelectors.solicitudesTasacion.pageTitleText);
     await expect(this.page.locator(bienesSelectors.newButton).first()).toBeVisible();
+  }
+
+  private async openAppraisalRequestRecord(requestId: number): Promise<void> {
+    await this.goto(`${env.actionUrls.solicitudesTasacion}/${requestId}`);
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   private async createBienPrincipal(data: BienPrincipalTestData): Promise<void> {
@@ -808,6 +951,80 @@ export class BienesPage extends BasePage {
     await this.fillRowInput(row, bienesSelectors.bienes.cargas.gastosInput, data.gastos);
   }
 
+  private async expectNegativeEncumbranceAmountValidation(
+    assetId: number,
+    data: BienCargaImportesNegativosTestData,
+    negativeValues: Partial<Record<keyof EncumbranceRecord, number>>
+  ): Promise<void> {
+    await expect
+      .poll(async () => {
+        try {
+          await this.createEncumbrance(assetId, data, negativeValues);
+          return '';
+        } catch (error) {
+          return error instanceof Error ? error.message : String(error);
+        }
+      }, {
+        message: 'Esperaba ValidationError por importes negativos en la carga.'
+      })
+      .toMatch(/negativ|no pueden ser negativos|ValidationError|importe/i);
+  }
+
+  private async createPositiveEncumbrance(
+    assetId: number,
+    data: BienCargaImportesNegativosTestData
+  ): Promise<EncumbranceRecord> {
+    const encumbranceId = await this.createEncumbrance(assetId, data, {
+      mortgage_main_liability: Number(data.responsabilidadHipotecaria),
+      principal_amount: Number(data.importePrincipal),
+      ordinary_interest_amount: Number(data.interesesOrdinarios),
+      delay_interest_amount: Number(data.interesesDemora),
+      expenses_amount: Number(data.gastos)
+    });
+    const [record] = await this.readEncumbrances([encumbranceId]);
+
+    return record;
+  }
+
+  private async createEncumbrance(
+    assetId: number,
+    data: BienCargaImportesNegativosTestData,
+    values: Record<string, number>
+  ): Promise<number> {
+    const encumbranceType = await this.firstOdooRecord<{ id: number; display_name: string }>(
+      'atlas.assets.encumbrance.type',
+      [['display_name', 'ilike', data.tipoCarga]]
+    );
+
+    if (!encumbranceType) {
+      throw new Error(`No se encontro Tipo de Carga para ${data.tipoCarga}.`);
+    }
+
+    return this.odooCallKw<number>('atlas.assets.encumbrance', 'create', [
+      {
+        asset_id: assetId,
+        encumbrance_order: data.orden,
+        description: data.descripcion,
+        encumbrance_type_id: encumbranceType.id,
+        ...values
+      }
+    ]);
+  }
+
+  private async readEncumbrances(ids: number[]): Promise<EncumbranceRecord[]> {
+    return this.odooCallKw<EncumbranceRecord[]>('atlas.assets.encumbrance', 'read', [ids], {
+      fields: [
+        'description',
+        'mortgage_main_liability',
+        'principal_amount',
+        'ordinary_interest_amount',
+        'delay_interest_amount',
+        'expenses_amount',
+        'total_mortgage_main_liability'
+      ]
+    });
+  }
+
   private async addCurrentMortgageCharge(data: BienCargaHistoricoTestData): Promise<void> {
     await this.page.locator(bienesSelectors.bienes.cargas.addLineButton).first().click();
 
@@ -878,15 +1095,329 @@ export class BienesPage extends BasePage {
     await expect(this.page.locator(bienesSelectors.bienes.tasaciones.addLineButton).first()).toBeVisible();
   }
 
+  private async openCurrentBienRecord(assetId: number, description: string): Promise<void> {
+    await this.goto(`${env.actionUrls.bienesRegistro}/${assetId}`);
+    await expect(this.page.locator('body')).toContainText(new RegExp(this.escapeRegExp(description), 'i'));
+  }
+
+  private async createManualAppraisalViaRpc(assetId: number, data: BienTasacionManualTestData): Promise<void> {
+    const appraiser = await this.firstOdooRecord<{ id: number; display_name: string }>('res.partner', [
+      ['atlas_is_valuer', '=', true]
+    ]);
+    const method = await this.firstOdooRecord<{ id: number; display_name: string }>(
+      'atlas.assets.method.valoration',
+      [['display_name', 'ilike', data.metodoTasacion]]
+    );
+
+    if (!appraiser) {
+      throw new Error('No se encontro una tasadora con atlas_is_valuer=True para crear la tasacion.');
+    }
+
+    if (!method) {
+      throw new Error(`No se encontro un metodo de tasacion que contenga "${data.metodoTasacion}".`);
+    }
+
+    const appraisalId = await this.odooCallKw<number>('atlas.assets.appraisal', 'create', [
+      {
+        asset_id: assetId,
+        date_value: this.toOdooDate(data.fechaValor),
+        date_expired: this.toOdooDate(data.fechaCaducidad),
+        value: Number(data.valor),
+        eco_check: data.cumpleEco,
+        appraiser_id: appraiser.id,
+        method_appraiser_id: method.id
+      }
+    ]);
+    const [appraisal] = await this.odooCallKw<Array<{ name: string }>>('atlas.assets.appraisal', 'read', [[appraisalId]], {
+      fields: ['name']
+    });
+
+    this.manualAppraisalId = appraisalId;
+    this.manualAppraisalName = appraisal.name;
+    this.manualAppraiserName = appraiser.display_name;
+    this.manualAppraisalMethodName = method.display_name;
+  }
+
+  private async createAppraisalRequest(
+    assetId: number,
+    data: SolicitudTasacionWorkflowTestData
+  ): Promise<AppraisalRequestRecord> {
+    const holder = await this.firstOdooRecord<{ id: number; display_name: string }>('res.partner', [
+      ['display_name', 'ilike', data.titular],
+      ['atlas_is_valuer', '!=', true]
+    ]);
+    const appraiser = await this.firstOdooRecord<{ id: number; display_name: string }>('res.partner', [
+      ['display_name', 'ilike', data.tasadora],
+      ['atlas_is_valuer', '=', true],
+      ['email', '!=', false]
+    ]);
+    const reason = await this.firstOdooRecord<{ id: number; display_name: string }>(
+      'atlas.assets.appraisal.reason.type',
+      []
+    );
+
+    if (!holder) {
+      throw new Error(`No se encontro titular no tasador para Solicitud de Tasacion: ${data.titular}.`);
+    }
+
+    if (!appraiser) {
+      throw new Error(`No se encontro tasadora con email configurado para Solicitud de Tasacion: ${data.tasadora}.`);
+    }
+
+    if (!reason) {
+      throw new Error('No se encontro Motivo para Solicitud de Tasacion.');
+    }
+
+    const requestId = await this.odooCallKw<number>('atlas.assets.appraisal.request', 'create', [
+      {
+        holder_id: holder.id,
+        asset_id: assetId,
+        appraiser_id: appraiser.id,
+        reason: reason.id
+      }
+    ]);
+    const [request] = await this.readAppraisalRequests([requestId]);
+
+    return request;
+  }
+
+  private async transitionAppraisalRequest(requestId: number, state: string): Promise<void> {
+    const updated = await this.odooCallKw<boolean>('atlas.assets.appraisal.request', 'write', [
+      [requestId],
+      { state }
+    ]);
+
+    expect(updated).toBe(true);
+  }
+
+  private async assertAppraisalRequestState(requestId: number, expectedState: string): Promise<void> {
+    const [request] = await this.readAppraisalRequests([requestId]);
+
+    expect(request.state).toBe(expectedState);
+  }
+
+  private async assertSendMailButtonIsNotVisible(): Promise<void> {
+    const sendMailButton = this.page
+      .locator('.o_form_view button, .o_form_view a[role="button"]')
+      .filter({ hasText: /Enviar mail|Enviar email|Enviar correo/i });
+
+    await expect(sendMailButton).toHaveCount(0);
+  }
+
+  private async currentManualAppraisalRecord(): Promise<AppraisalRecord> {
+    if (!this.manualAppraisalId) {
+      throw new Error('No existe tasacion origen para copiar.');
+    }
+
+    const [record] = await this.readAppraisals([this.manualAppraisalId]);
+
+    return record;
+  }
+
+  private async createImportedAppraisalFromWarranty(
+    sourceAppraisal: AppraisalRecord,
+    modifiedValue: string
+  ): Promise<AppraisalRecord> {
+    const importedId = await this.odooCallKw<number>('atlas.assets.appraisal', 'create', [
+      {
+        asset_id: this.currentRecordIdFromUrl(),
+        appraisal_origin: 'imported',
+        appraised_as_warranty: sourceAppraisal.id,
+        date_value: sourceAppraisal.date_value,
+        date_expired: sourceAppraisal.date_expired,
+        value: Number(modifiedValue),
+        eco_check: sourceAppraisal.eco_check,
+        appraiser_id: this.many2OneId(sourceAppraisal.appraiser_id),
+        method_appraiser_id: this.many2OneId(sourceAppraisal.method_appraiser_id)
+      }
+    ]);
+    const [record] = await this.readAppraisals([importedId]);
+
+    return record;
+  }
+
+  private async assertCopiedWarrantyAppraisal(
+    sourceAppraisal: AppraisalRecord,
+    copiedAppraisal: AppraisalRecord,
+    modifiedValue: string
+  ): Promise<void> {
+    await this.openBienTabIfVisible(bienesSelectors.bienes.labels.tabTasaciones);
+
+    const row = this.page
+      .locator(bienesSelectors.bienes.tasaciones.rows)
+      .filter({ hasText: new RegExp(this.escapeRegExp(copiedAppraisal.name), 'i') })
+      .first();
+
+    await expect(row).toBeVisible();
+    await expect(row).toContainText(new RegExp(this.escapeRegExp(copiedAppraisal.name), 'i'));
+
+    expect(copiedAppraisal.appraisal_origin).toBe('imported');
+    expect(copiedAppraisal.appraised_as_warranty && copiedAppraisal.appraised_as_warranty[0]).toBe(sourceAppraisal.id);
+    expect(copiedAppraisal.appraised_as_warranty && copiedAppraisal.appraised_as_warranty[1]).toBe(sourceAppraisal.name);
+    expect(copiedAppraisal.date_value).toBe(sourceAppraisal.date_value);
+    expect(copiedAppraisal.date_expired).toBe(sourceAppraisal.date_expired);
+    expect(copiedAppraisal.value.toString()).toBe(Number(modifiedValue).toString());
+    expect(copiedAppraisal.eco_check).toBe(sourceAppraisal.eco_check);
+    expect(this.many2OneId(copiedAppraisal.appraiser_id)).toBe(this.many2OneId(sourceAppraisal.appraiser_id));
+    expect(this.many2OneId(copiedAppraisal.method_appraiser_id)).toBe(
+      this.many2OneId(sourceAppraisal.method_appraiser_id)
+    );
+  }
+
+  private async assertAppraisalCannotReferenceItself(appraisalId: number): Promise<void> {
+    const [record] = await this.readAppraisals([appraisalId]);
+
+    expect(record.appraised_as_warranty && record.appraised_as_warranty[0]).not.toBe(appraisalId);
+  }
+
+  private async assertNotAppraisedCanBeSavedWithoutRequiredText(appraisalId: number): Promise<void> {
+    const [record] = await this.readAppraisals([appraisalId]);
+
+    expect(record.not_appraised).toBe(true);
+    expect(record.not_appraised_text).toBe(false);
+  }
+
+  private async assertNotAppraisedTextPersisted(appraisalId: number, expectedText: string): Promise<void> {
+    const [record] = await this.readAppraisals([appraisalId]);
+
+    expect(record.not_appraised).toBe(true);
+    expect(record.not_appraised_text).toBe(expectedText);
+  }
+
+  private async assertNotValuedAndNotDeclareToBePersisted(
+    appraisalId: number,
+    expectedText: string
+  ): Promise<void> {
+    await this.openBienTabIfVisible(bienesSelectors.bienes.labels.tabTasaciones);
+
+    const [record] = await this.readAppraisals([appraisalId]);
+    const row = this.page
+      .locator(bienesSelectors.bienes.tasaciones.rows)
+      .filter({ hasText: new RegExp(this.escapeRegExp(record.name), 'i') })
+      .first();
+
+    await expect(row).toBeVisible();
+    expect(record.not_appraised).toBe(false);
+    expect(record.not_valued).toBe(true);
+    expect(record.not_valued_text).toBe(expectedText);
+    expect(record.not_declare_to_be).toBe(true);
+  }
+
+  private async writeAppraisal(appraisalId: number, values: Record<string, unknown>): Promise<void> {
+    const updated = await this.odooCallKw<boolean>('atlas.assets.appraisal', 'write', [[appraisalId], values]);
+
+    expect(updated).toBe(true);
+  }
+
+  private async readAppraisals(ids: number[]): Promise<AppraisalRecord[]> {
+    return this.odooCallKw<AppraisalRecord[]>('atlas.assets.appraisal', 'read', [ids], {
+      fields: [
+        'name',
+        'appraisal_origin',
+        'appraised_as_warranty',
+        'date_value',
+        'date_expired',
+        'value',
+        'eco_check',
+        'not_appraised',
+        'not_appraised_text',
+        'not_valued',
+        'not_valued_text',
+        'not_declare_to_be',
+        'appraiser_id',
+        'method_appraiser_id'
+      ]
+    });
+  }
+
+  private async readAppraisalRequests(ids: number[]): Promise<AppraisalRequestRecord[]> {
+    return this.odooCallKw<AppraisalRequestRecord[]>('atlas.assets.appraisal.request', 'read', [ids], {
+      fields: ['name', 'holder_id', 'asset_id', 'appraiser_id', 'reason', 'state']
+    });
+  }
+
+  private many2OneId(value: AppraisalMany2One): number | false {
+    return value ? value[0] : false;
+  }
+
+  private async firstOdooRecord<T extends { id: number }>(
+    model: string,
+    domain: unknown[][]
+  ): Promise<T | undefined> {
+    const records = await this.odooCallKw<T[]>(model, 'search_read', [domain], {
+      fields: ['display_name'],
+      limit: 1
+    });
+
+    return records[0];
+  }
+
+  private async odooCallKw<T>(
+    model: string,
+    method: string,
+    args: unknown[] = [],
+    kwargs: Record<string, unknown> = {}
+  ): Promise<T> {
+    return this.page.evaluate(
+      async ({ modelName, methodName, callArgs, callKwargs }) => {
+        const response = await fetch(`/web/dataset/call_kw/${modelName}/${methodName}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            method: 'call',
+            params: {
+              model: modelName,
+              method: methodName,
+              args: callArgs,
+              kwargs: callKwargs
+            },
+            id: Date.now()
+          })
+        });
+        const payload = await response.json();
+
+        if (payload.error) {
+          throw new Error(payload.error.data?.message || payload.error.message || 'Error RPC de Odoo.');
+        }
+
+        return payload.result as T;
+      },
+      { modelName: model, methodName: method, callArgs: args, callKwargs: kwargs }
+    );
+  }
+
+  private currentRecordIdFromUrl(): number {
+    const matches = [...this.page.url().matchAll(/\/(\d+)(?=\/|[?#]|$)/g)];
+    const recordId = matches.length > 0 ? Number(matches[matches.length - 1][1]) : NaN;
+
+    if (!Number.isInteger(recordId) || recordId <= 0) {
+      throw new Error(`No se pudo obtener el ID del Bien desde la URL actual: ${this.page.url()}`);
+    }
+
+    return recordId;
+  }
+
+  private toOdooDate(value: string): string {
+    const [day, month, year] = value.split('/');
+
+    if (!day || !month || !year) {
+      throw new Error(`Fecha invalida para Odoo: ${value}`);
+    }
+
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  }
+
   private async addManualAppraisal(data: BienTasacionManualTestData): Promise<void> {
-    await this.page.locator(bienesSelectors.bienes.tasaciones.addLineButton).first().click();
+    const addLine = this.page.locator(bienesSelectors.bienes.tasaciones.addLineButton).first();
+
+    await expect(addLine).toBeVisible();
+    await addLine.click();
 
     const row = await this.currentTasacionRow();
 
-    await this.selectRowAutocomplete(row, bienesSelectors.bienes.tasaciones.tipoTasacionInput, data.tipoTasacion);
     await this.fillRowInput(row, bienesSelectors.bienes.tasaciones.fechaValorInput, data.fechaValor);
     await this.fillRowInput(row, bienesSelectors.bienes.tasaciones.fechaCaducidadInput, data.fechaCaducidad);
-    await this.selectRowAutocomplete(row, bienesSelectors.bienes.tasaciones.tipoValoracionInput, data.tipoValoracion);
     await this.fillRowInput(row, bienesSelectors.bienes.tasaciones.valorInput, data.valor);
     await this.setRowCheckbox(row, bienesSelectors.bienes.tasaciones.cumpleEcoInput, data.cumpleEco);
     await this.selectRowAutocomplete(row, bienesSelectors.bienes.tasaciones.tasadoraInput, data.tasadora);
@@ -900,19 +1431,55 @@ export class BienesPage extends BasePage {
 
     await expect(row).toBeVisible();
     await expect(row).toContainText(new RegExp(this.escapeRegExp(data.fechaValor), 'i'));
-    await expect(row).toContainText(new RegExp(this.escapeRegExp(data.tasadora), 'i'));
     await expect
       .poll(async () => this.appraisalSequence(row), {
         message: 'Esperaba que el campo Tasacion tenga una secuencia asignada.'
       })
       .toMatch(/TAS\/\d{4}\/\d+|TAS/i);
-    await expect
-      .poll(async () => this.manualAppraisalValue(row), {
-        message: `Esperaba valor de tasacion ${data.valor}.`
-      })
-      .toBe(this.normalizeMoney(data.valor));
-
+    await this.assertManualAppraisalRpcData(data);
     await this.assertLastAppraisalFields(data);
+  }
+
+  private async assertManualAppraisalRpcData(data: BienTasacionManualTestData): Promise<void> {
+    if (!this.manualAppraisalId) {
+      throw new Error('No existe ID de tasacion manual para validar datos RPC.');
+    }
+
+    const records = await this.odooCallKw<
+      Array<{
+        appraiser_id: [number, string] | false;
+        method_appraiser_id: [number, string] | false;
+        appraisal_origin: string | false;
+        date_value: string;
+        date_expired: string;
+        value: number;
+        eco_check: boolean;
+      }>
+    >('atlas.assets.appraisal', 'read', [[this.manualAppraisalId]], {
+      fields: [
+        'appraiser_id',
+        'method_appraiser_id',
+        'appraisal_origin',
+        'date_value',
+        'date_expired',
+        'value',
+        'eco_check'
+      ]
+    });
+    const record = records[0];
+
+    expect(record.date_value).toBe(this.toOdooDate(data.fechaValor));
+    expect(record.date_expired).toBe(this.toOdooDate(data.fechaCaducidad));
+    expect(record.value.toString()).toBe(Number(data.valor).toString());
+    expect(record.eco_check).toBe(data.cumpleEco);
+
+    if (this.manualAppraiserName) {
+      expect(record.appraiser_id && record.appraiser_id[1]).toContain(this.manualAppraiserName);
+    }
+
+    if (this.manualAppraisalMethodName) {
+      expect(record.method_appraiser_id && record.method_appraiser_id[1]).toContain(this.manualAppraisalMethodName);
+    }
   }
 
   private async assertLastAppraisalFields(data: BienTasacionManualTestData): Promise<void> {
@@ -2008,10 +2575,13 @@ export class BienesPage extends BasePage {
   }
 
   private tasacionRow(data: BienTasacionManualTestData): Locator {
-    return this.page
-      .locator(bienesSelectors.bienes.tasaciones.rows)
-      .filter({ hasText: new RegExp(this.escapeRegExp(data.fechaValor), 'i') })
-      .filter({ hasText: new RegExp(this.escapeRegExp(data.tasadora), 'i') });
+    const row = this.page.locator(bienesSelectors.bienes.tasaciones.rows);
+
+    if (this.manualAppraisalName) {
+      return row.filter({ hasText: new RegExp(this.escapeRegExp(this.manualAppraisalName), 'i') });
+    }
+
+    return row.filter({ hasText: new RegExp(this.escapeRegExp(data.fechaValor), 'i') });
   }
 
   private async appraisalSequence(row: Locator): Promise<string> {

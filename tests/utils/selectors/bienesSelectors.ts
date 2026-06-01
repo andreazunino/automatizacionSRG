@@ -162,15 +162,15 @@ export const bienesSelectors = {
     },
     cargas: {
       rows:
-        'div[name="charge_ids"] tr.o_data_row, div[name="carga_ids"] tr.o_data_row, div[name="mortgage_charge_ids"] tr.o_data_row, div[name="traba_ids"] tr.o_data_row',
+        '.o_notebook_content:visible tr.o_data_row, div[name="charge_ids"] tr.o_data_row, div[name="carga_ids"] tr.o_data_row, div[name="mortgage_charge_ids"] tr.o_data_row, div[name="traba_ids"] tr.o_data_row, div[name="encumbrance_ids"] tr.o_data_row',
       selectedRow:
-        'div[name="charge_ids"] tr.o_selected_row, div[name="carga_ids"] tr.o_selected_row, div[name="mortgage_charge_ids"] tr.o_selected_row, div[name="traba_ids"] tr.o_selected_row',
+        '.o_notebook_content:visible tr.o_selected_row, div[name="charge_ids"] tr.o_selected_row, div[name="carga_ids"] tr.o_selected_row, div[name="mortgage_charge_ids"] tr.o_selected_row, div[name="traba_ids"] tr.o_selected_row, div[name="encumbrance_ids"] tr.o_selected_row',
       addLineButton:
-        'div[name="charge_ids"] a:has-text("Agregar"), div[name="charge_ids"] a:has-text("Añadir"), div[name="carga_ids"] a:has-text("Agregar"), div[name="carga_ids"] a:has-text("Añadir"), div[name="mortgage_charge_ids"] a:has-text("Agregar"), div[name="mortgage_charge_ids"] a:has-text("Añadir"), div[name="traba_ids"] a:has-text("Agregar"), div[name="traba_ids"] a:has-text("Añadir")',
+        '.o_notebook_content:visible .o_field_x2many_list_row_add a:has-text("Añadir una línea"), .o_notebook_content:visible .o_field_x2many_list_row_add a:has-text("Agregar una línea"), div[name="charge_ids"] a:has-text("Agregar"), div[name="charge_ids"] a:has-text("Añadir"), div[name="carga_ids"] a:has-text("Agregar"), div[name="carga_ids"] a:has-text("Añadir"), div[name="mortgage_charge_ids"] a:has-text("Agregar"), div[name="mortgage_charge_ids"] a:has-text("Añadir"), div[name="traba_ids"] a:has-text("Agregar"), div[name="traba_ids"] a:has-text("Añadir"), div[name="encumbrance_ids"] a:has-text("Agregar"), div[name="encumbrance_ids"] a:has-text("Añadir")',
       descriptionInput:
         'td[name="name"] input, td[name="description"] input, td[name="descripcion"] input, td input[name="name"], td input[name="description"], td input[name="descripcion"]',
       tipoCargaInput:
-        'td[name="charge_type_id"] input, td[name="tipo_carga_id"] input, td[name="type_id"] input, td input[role="combobox"]',
+        'td[name="encumbrance_type_id"] input, td[name="charge_type_id"] input, td[name="tipo_carga_id"] input, td[name="type_id"] input, td input[role="combobox"]',
       beneficiarioInput:
         'td[name="beneficiary_id"] input, td[name="beneficiario_id"] input, td[name="partner_id"] input, td input[role="combobox"]',
       fechaBajaInput:
@@ -178,15 +178,15 @@ export const bienesSelectors = {
       importePrincipalInput:
         'td[name="principal_amount"] input, td[name="importe_principal"] input, td[name="principal"] input, td input[type="number"]',
       interesesOrdinariosInput:
-        'td[name="ordinary_interest"] input, td[name="intereses_ordinarios"] input, td[name="interes_ordinario"] input, td input[type="number"]',
+        'td[name="ordinary_interest_amount"] input, td[name="ordinary_interest"] input, td[name="intereses_ordinarios"] input, td[name="interes_ordinario"] input, td input[type="number"]',
       interesesDemoraInput:
-        'td[name="default_interest"] input, td[name="intereses_demora"] input, td[name="interes_demora"] input, td input[type="number"]',
+        'td[name="delay_interest_amount"] input, td[name="default_interest"] input, td[name="intereses_demora"] input, td[name="interes_demora"] input, td input[type="number"]',
       gastosInput:
-        'td[name="expenses"] input, td[name="gastos"] input, td input[type="number"]',
+        'td[name="expenses_amount"] input, td[name="expenses"] input, td[name="gastos"] input, td input[type="number"]',
       totalResponsabilidadInput:
-        'td[name="total_mortgage_liability"] input, td[name="total_resp_hipotecaria_principal"] input, td[name="total_responsabilidad"] input',
+        'td[name="total_mortgage_main_liability"] input, td[name="total_mortgage_liability"] input, td[name="total_resp_hipotecaria_principal"] input, td[name="total_responsabilidad"] input',
       totalResponsabilidadCell:
-        'td[name="total_mortgage_liability"], td[name="total_resp_hipotecaria_principal"], td[name="total_responsabilidad"]',
+        'td[name="total_mortgage_main_liability"], td[name="total_mortgage_liability"], td[name="total_resp_hipotecaria_principal"], td[name="total_responsabilidad"]',
       historicoButton:
         'button:has-text("Ver histórico"), button:has-text("Ver historico"), a:has-text("Ver histórico"), a:has-text("Ver historico")',
       vigentesButton:
@@ -194,11 +194,11 @@ export const bienesSelectors = {
     },
     tasaciones: {
       rows:
-        'div[name="appraisal_ids"] tr.o_data_row, div[name="tasacion_ids"] tr.o_data_row, div[name="valuation_ids"] tr.o_data_row, div[name="asset_appraisal_ids"] tr.o_data_row',
+        '.o_notebook_content:visible tr.o_data_row, .o_notebook_content:visible tr.o_selected_row, div[name="appraisal_ids"] tr.o_data_row, div[name="tasacion_ids"] tr.o_data_row, div[name="valuation_ids"] tr.o_data_row, div[name="asset_appraisal_ids"] tr.o_data_row',
       selectedRow:
-        'div[name="appraisal_ids"] tr.o_selected_row, div[name="tasacion_ids"] tr.o_selected_row, div[name="valuation_ids"] tr.o_selected_row, div[name="asset_appraisal_ids"] tr.o_selected_row',
+        '.o_notebook_content:visible tr.o_selected_row, div[name="appraisal_ids"] tr.o_selected_row, div[name="tasacion_ids"] tr.o_selected_row, div[name="valuation_ids"] tr.o_selected_row, div[name="asset_appraisal_ids"] tr.o_selected_row',
       addLineButton:
-        'div[name="appraisal_ids"] a:has-text("Agregar"), div[name="appraisal_ids"] a:has-text("AÃ±adir"), div[name="tasacion_ids"] a:has-text("Agregar"), div[name="tasacion_ids"] a:has-text("AÃ±adir"), div[name="valuation_ids"] a:has-text("Agregar"), div[name="valuation_ids"] a:has-text("AÃ±adir"), div[name="asset_appraisal_ids"] a:has-text("Agregar"), div[name="asset_appraisal_ids"] a:has-text("AÃ±adir")',
+        '.o_notebook_content:visible .o_field_x2many_list_row_add a:has-text("Añadir una línea"), .o_notebook_content:visible .o_field_x2many_list_row_add a:has-text("Agregar una línea"), div[name="appraisal_ids"] a:has-text("Agregar"), div[name="appraisal_ids"] a:has-text("Añadir"), div[name="tasacion_ids"] a:has-text("Agregar"), div[name="tasacion_ids"] a:has-text("Añadir"), div[name="valuation_ids"] a:has-text("Agregar"), div[name="valuation_ids"] a:has-text("Añadir"), div[name="asset_appraisal_ids"] a:has-text("Agregar"), div[name="asset_appraisal_ids"] a:has-text("Añadir")',
       sequenceCell:
         'td[name="name"], td[name="code"], td[name="tasacion"], td[name="appraisal_code"], td[name="appraisal_sequence"]',
       tipoTasacionInput:

@@ -151,16 +151,40 @@ export interface BienCargaHistoricoTestData {
   importePrincipal: string;
 }
 
+export interface BienCargaImportesNegativosTestData {
+  bien: BienPrincipalTestData;
+  descripcion: string;
+  tipoCarga: string;
+  orden: number;
+  responsabilidadHipotecariaNegativa: string;
+  importePrincipalNegativo: string;
+  responsabilidadHipotecaria: string;
+  importePrincipal: string;
+  interesesOrdinarios: string;
+  interesesDemora: string;
+  gastos: string;
+  totalEsperado: string;
+}
+
 export interface BienTasacionManualTestData {
   bien: BienPrincipalTestData;
-  tipoTasacion: string;
   fechaValor: string;
   fechaCaducidad: string;
-  tipoValoracion: string;
   valor: string;
   cumpleEco: boolean;
   tasadora: string;
   metodoTasacion: string;
+}
+
+export interface BienTasacionGarantiaTestData {
+  tasacionOrigen: BienTasacionManualTestData;
+  valorModificado: string;
+}
+
+export interface BienTasacionJustificacionesTestData {
+  tasacion: BienTasacionManualTestData;
+  justificacionNoTasable: string;
+  justificacionNoValorar: string;
 }
 
 export interface SolicitudTasacionDominiosTestData {
@@ -168,6 +192,16 @@ export interface SolicitudTasacionDominiosTestData {
   titularTasador: string;
   tasadoraNoTasadora: string;
   estadoEsperado: string;
+}
+
+export interface SolicitudTasacionWorkflowTestData {
+  bien: BienPrincipalTestData;
+  titular: string;
+  tasadora: string;
+  estadoInicial: string;
+  estadoEnviada: string;
+  estadoDocRecibido: string;
+  estadoConfirmado: string;
 }
 
 export interface BienSeguridadCrudTestData {
@@ -453,17 +487,47 @@ export const createBienCargaHistoricoTestData = (): BienCargaHistoricoTestData =
   };
 };
 
+export const createBienCargaImportesNegativosTestData = (): BienCargaImportesNegativosTestData => {
+  return {
+    bien: createBienPrincipalTestData(),
+    descripcion: 'Hipoteca Test Negativo',
+    tipoCarga: 'HIPOTECA',
+    orden: 10,
+    responsabilidadHipotecariaNegativa: '-5000',
+    importePrincipalNegativo: '-1000',
+    responsabilidadHipotecaria: '5000',
+    importePrincipal: '1000',
+    interesesOrdinarios: '200',
+    interesesDemora: '300',
+    gastos: '400',
+    totalEsperado: '1900'
+  };
+};
+
 export const createBienTasacionManualTestData = (): BienTasacionManualTestData => {
   return {
     bien: createBienPrincipalTestData(),
-    tipoTasacion: 'R',
     fechaValor: '01/01/2025',
     fechaCaducidad: '01/01/2027',
-    tipoValoracion: 'Tasación',
     valor: '150000',
     cumpleEco: true,
-    tasadora: 'Tasadora Test S.A.',
+    tasadora: 'AESVAL LOGICA DE VALORACIONES S.A.',
     metodoTasacion: 'Método'
+  };
+};
+
+export const createBienTasacionGarantiaTestData = (): BienTasacionGarantiaTestData => {
+  return {
+    tasacionOrigen: createBienTasacionManualTestData(),
+    valorModificado: '160000'
+  };
+};
+
+export const createBienTasacionJustificacionesTestData = (): BienTasacionJustificacionesTestData => {
+  return {
+    tasacion: createBienTasacionManualTestData(),
+    justificacionNoTasable: 'Bien con litigio judicial activo',
+    justificacionNoValorar: 'Cliente aporta valoración propia'
   };
 };
 
@@ -473,6 +537,18 @@ export const createSolicitudTasacionDominiosTestData = (): SolicitudTasacionDomi
     titularTasador: 'Contacto Tasadora Test',
     tasadoraNoTasadora: 'Contacto Titular Test',
     estadoEsperado: 'Solicitada'
+  };
+};
+
+export const createSolicitudTasacionWorkflowTestData = (): SolicitudTasacionWorkflowTestData => {
+  return {
+    bien: createBienPrincipalTestData(),
+    titular: 'Juan García',
+    tasadora: 'AESVAL LOGICA DE VALORACIONES S.A.',
+    estadoInicial: 'solicitada',
+    estadoEnviada: 'enviada',
+    estadoDocRecibido: 'doc_recibido',
+    estadoConfirmado: 'confirmado'
   };
 };
 

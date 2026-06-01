@@ -3,6 +3,7 @@ import {
   createBienAgrupacionTestData,
   createBienCargaHistoricoTestData,
   createBienCargaHipotecariaTestData,
+  createBienCargaImportesNegativosTestData,
   createBienDocumentosTestData,
   createBienBusquedaFiltrosTestData,
   createBienPrincipalTestData,
@@ -12,8 +13,11 @@ import {
   createBienPropietariosTestData,
   createBienSeguridadCrudTestData,
   createBienSinAgrupacionTestData,
+  createBienTasacionGarantiaTestData,
+  createBienTasacionJustificacionesTestData,
   createBienTasacionManualTestData,
   createSolicitudTasacionDominiosTestData,
+  createSolicitudTasacionWorkflowTestData,
   createMotivoSolicitudTestData,
   createRegistroPropiedadTestData,
   createTipoBienTestData,
@@ -131,11 +135,23 @@ When('doy de baja una carga vigente de un Bien', async function (this: CustomWor
   await this.bienesPage.deactivateMortgageChargeAndValidateHistory(this.currentBienCargaHistorico);
 });
 
+When('valido que los importes de carga no admiten valores negativos', async function (this: CustomWorld) {
+  this.currentBienCargaImportesNegativos = createBienCargaImportesNegativosTestData();
+  await this.bienesPage.validateMortgageChargeAmountsRejectNegativeValues(
+    this.currentBienCargaImportesNegativos
+  );
+});
+
 When('valido dominios de Titular y Tasadora en una Solicitud de Tasacion', async function (
   this: CustomWorld
 ) {
   this.currentSolicitudTasacionDominios = createSolicitudTasacionDominiosTestData();
   await this.bienesPage.validateTasacionTitularAndTasadoraDomains(this.currentSolicitudTasacionDominios);
+});
+
+When('ejecuto el workflow completo de una Solicitud de Tasacion', async function (this: CustomWorld) {
+  this.currentSolicitudTasacionWorkflow = createSolicitudTasacionWorkflowTestData();
+  await this.bienesPage.validateAppraisalRequestFullWorkflow(this.currentSolicitudTasacionWorkflow);
 });
 
 When('preparo un Bien con propietario y abro la ficha del Contacto propietario', async function (
@@ -154,6 +170,22 @@ When('valido acceso CRUD completo de Bienes con usuario interno estandar', async
 When('creo una tasacion manual en un Bien y verifico su secuencia', async function (this: CustomWorld) {
   this.currentBienTasacionManual = createBienTasacionManualTestData();
   await this.bienesPage.createManualAppraisalAndValidateSequence(this.currentBienTasacionManual);
+});
+
+When('copio una tasacion existente mediante Tasada en Garantia y modifico el valor', async function (
+  this: CustomWorld
+) {
+  this.currentBienTasacionGarantia = createBienTasacionGarantiaTestData();
+  await this.bienesPage.copyAppraisalFromWarrantyAndValidate(this.currentBienTasacionGarantia);
+});
+
+When('valido No Tasable No Valorar y No declarable al BDE en una tasacion', async function (
+  this: CustomWorld
+) {
+  this.currentBienTasacionJustificaciones = createBienTasacionJustificacionesTestData();
+  await this.bienesPage.validateAppraisalNotAppraisedAndNotValuedFields(
+    this.currentBienTasacionJustificaciones
+  );
 });
 
 Then('deberia completarse el ciclo CRUD de Tipo de Bienes', async function (this: CustomWorld) {
@@ -368,6 +400,19 @@ Then('deberia visualizar la carga en historico y no en vigentes', async function
   );
 });
 
+Then('deberia quedar validada la restriccion de importes negativos en cargas', async function (
+  this: CustomWorld
+) {
+  if (!this.currentBienCargaImportesNegativos) {
+    throw new Error('No existen datos de carga con importes negativos en el escenario actual.');
+  }
+
+  await this.attach(
+    `Importes negativos rechazados y carga positiva validada con total ${this.currentBienCargaImportesNegativos.totalEsperado}.`,
+    'text/plain'
+  );
+});
+
 Then('deberia visualizar estado Solicitada y validacion por campos obligatorios pendientes', async function (
   this: CustomWorld
 ) {
@@ -380,6 +425,18 @@ Then('deberia visualizar estado Solicitada y validacion por campos obligatorios 
   );
 });
 
+Then('deberia quedar validado el workflow completo de Solicitud de Tasacion', async function (
+  this: CustomWorld
+) {
+  if (!this.currentSolicitudTasacionWorkflow) {
+    throw new Error('No existen datos de workflow de Solicitud de Tasacion en el escenario actual.');
+  }
+
+  await this.attach(
+    `Workflow validado hasta estado ${this.currentSolicitudTasacionWorkflow.estadoConfirmado}.`,
+    'text/plain'
+  );
+});
 Then('deberia visualizar el Bien en la pestaña Bienes del Contacto y abrir su formulario', async function (
   this: CustomWorld
 ) {
@@ -413,6 +470,32 @@ Then('deberia quedar validada la tasacion manual con secuencia y ultima tasacion
 
   await this.attach(
     `Tasacion manual validada para ${this.currentBienTasacionManual.bien.descripcion} con fecha valor ${this.currentBienTasacionManual.fechaValor}.`,
+    'text/plain'
+  );
+});
+
+Then('deberia quedar validada la tasacion copiada desde Tasada en Garantia', async function (
+  this: CustomWorld
+) {
+  if (!this.currentBienTasacionGarantia) {
+    throw new Error('No existe una tasacion copiada desde garantia en el escenario actual.');
+  }
+
+  await this.attach(
+    `Tasacion copiada validada con valor ${this.currentBienTasacionGarantia.valorModificado}.`,
+    'text/plain'
+  );
+});
+
+Then('deberia quedar validada la persistencia de No Tasable No Valorar y No declarable al BDE', async function (
+  this: CustomWorld
+) {
+  if (!this.currentBienTasacionJustificaciones) {
+    throw new Error('No existen datos de justificaciones de tasacion en el escenario actual.');
+  }
+
+  await this.attach(
+    `Justificaciones validadas: ${this.currentBienTasacionJustificaciones.justificacionNoTasable} / ${this.currentBienTasacionJustificaciones.justificacionNoValorar}.`,
     'text/plain'
   );
 });

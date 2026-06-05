@@ -34,6 +34,7 @@ export const env = {
   headless: parseBoolean(process.env.HEADLESS, true),
   actionUrls: {
     bienes: process.env.ACTION_BIENES || '/odoo/action-858',
+    blanqueo: process.env.ACTION_BLANQUEO || '/odoo/action-863',
     tiposBienes: process.env.ACTION_TIPOS_BIENES || process.env.ACTION_BIENES_TIPOS || '',
     bienesRegistro: process.env.ACTION_BIENES_REGISTRO || process.env.ACTION_BIENES || '/odoo/action-858',
     registroPropiedad: process.env.ACTION_REGISTRO_PROPIEDAD || '/odoo/action-858',

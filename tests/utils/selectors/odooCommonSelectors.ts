@@ -20,5 +20,13 @@ export const odooCommonSelectors = {
   archivedFilterOption:
     '.dropdown-item:has-text("Archivado"), [role="menuitem"]:has-text("Archivado"), [role="option"]:has-text("Archivado"), button:has-text("Archivado")',
   autocompleteOption:
-    '.o-autocomplete--dropdown-item, .dropdown-menu .dropdown-item, .ui-menu-item, .o_select_menu_item, [role="option"], [role="menuitem"]'
+    '.o-autocomplete--dropdown-item, .dropdown-menu .dropdown-item, .ui-menu-item, .o_select_menu_item, [role="option"], [role="menuitem"]',
+  validationText:
+    '.modal, .o_dialog, .o_notification, .o_notification_content, .invalid-feedback, .text-danger, .o_field_invalid, .is-invalid',
+  invalidField: '[aria-invalid="true"], .o_field_invalid, .is-invalid, .o_form_invalid',
+  chatter:
+    '.o-mail-Chatter, .o_Chatter, .o_chatter, .oe_chatter, [class*="Chatter"], [class*="chatter"]',
+  statusbarActive:
+    '.o_statusbar_status .active, .o_statusbar_status button[aria-checked="true"], .o_statusbar_status button.active',
+  htmlEditor: '[contenteditable="true"], .note-editable, .odoo-editor-editable'
 } as const;

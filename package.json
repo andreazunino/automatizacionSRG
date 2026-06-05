@@ -7,6 +7,7 @@
     "test": "cucumber-js",
     "test:contactos": "cucumber-js tests/features/contactos/**/*.feature --tags \"@contactos and not @no_automatizar and not @cron and not @rpc and not @api_externa and not @bug_bloqueante\"",
     "test:bienes": "cucumber-js tests/features/bienes/**/*.feature --tags \"@bienes and not @no_automatizar and not @cron and not @rpc and not @api_externa and not @bug_bloqueante\"",
+    "test:blanqueo": "cucumber-js tests/features/blanqueo/**/*.feature --tags \"@blanqueo and not @no_automatizar and not @cron and not @rpc and not @api_externa and not @bug_bloqueante\"",
     "test:productos": "cucumber-js tests/features/productos/**/*.feature --tags \"@productos and not @no_automatizar and not @cron and not @rpc and not @api_externa and not @bug_bloqueante\"",
     "test:headed": "cross-env HEADLESS=false cucumber-js",
     "report": "node scripts/open-report.js",

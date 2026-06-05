@@ -72,6 +72,22 @@ El caso `TC-003` valida crear, editar y archivar Registro de Propiedad, y rechaz
 Observacion funcional de `TC-003`: al completar el campo `Observaciones`, que aparentemente admite contenido enriquecido, se observa que no se renderiza correctamente en la interfaz y muestra etiquetas HTML visibles al usuario. No forma parte de la validacion automatizada principal del CP.
 El caso `TC-005` valida Motivos de Solicitud usando `ACTION_MOTIVOS_SOLICITUD`: el campo secundario cambia sus opciones segun el Motivo, se limpia al modificarlo, y el Nombre completo se calcula dinamicamente.
 
+## Modulo Blanqueo
+
+Los escenarios del modulo `blanqueo` estan en `tests/features/blanqueo/blanqueo.feature` y cubren expedientes de blanqueo de capitales.
+
+### Implementacion
+
+- Page principal: `tests/pages/BlanqueoPage.ts`.
+- Steps: `tests/steps/blanqueo.steps.ts`.
+- Selectores: `tests/utils/selectors/blanqueoSelectors.ts`.
+- Datos y factories: `tests/fixtures/blanqueo/blanqueoData.ts`.
+- URL configurable: `ACTION_BLANQUEO` (`https://atlas-pruebas.odoo.com/odoo/action-863`).
+
+El caso `BLA-001` valida crear un expediente de blanqueo con datos completos, codigo automatico de secuencia, NIF autocompletado desde el titular, estado inicial `Incompleto`, origen `Manual` y chatter de creacion.
+
+El titular del caso se crea previamente desde la UI de Contactos, manteniendo el mismo criterio usado por los modulos anteriores.
+
 ## Estructura por modulo
 
 Cada modulo nuevo debe seguir esta forma:
@@ -128,6 +144,7 @@ Dry-run por scripts:
 npm run test:contactos -- --dry-run
 npm run test:productos -- --dry-run
 npm run test:bienes -- --dry-run
+npm run test:blanqueo -- --dry-run
 ```
 
 ## Casos excluidos

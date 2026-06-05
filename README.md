@@ -28,6 +28,7 @@ COMMISSION_PRODUCTS_URL=https://atlas-pruebas.odoo.com/odoo/action-1194
 ACTION_BIENES=https://atlas-pruebas.odoo.com/odoo/action-858
 ACTION_REGISTRO_PROPIEDAD=https://atlas-pruebas.odoo.com/odoo/action-858
 ACTION_MOTIVOS_SOLICITUD=https://atlas-pruebas.odoo.com/odoo/action-994
+ACTION_BLANQUEO=https://atlas-pruebas.odoo.com/odoo/action-863
 ADMIN_USER=usuario_admin
 ADMIN_PASSWORD=password_admin
 INTERNAL_USER=usuario_interno
@@ -65,6 +66,12 @@ Ejecutar solo el modulo Bienes:
 
 ```bash
 npm run test:bienes
+```
+
+Ejecutar solo el modulo Blanqueo:
+
+```bash
+npm run test:blanqueo
 ```
 
 Ejecutar con navegador visible:
@@ -165,6 +172,10 @@ tests/fixtures/<modulo>/<modulo>Data.ts
 tests/utils/selectors/<modulo>Selectors.ts
 ```
 
+Page base:
+
+- `tests/pages/BasePage.ts`: navegacion y acciones genericas del framework.
+
 Selectores comunes:
 
 - `tests/utils/selectors/loginSelectors.ts`
@@ -182,12 +193,14 @@ Selectores por modulo:
 - `tests/utils/selectors/conceptosComisionSelectors.ts`
 - `tests/utils/selectors/tipologiasProductoSelectors.ts`
 - `tests/utils/selectors/naturalezaT4Selectors.ts`
+- `tests/utils/selectors/blanqueoSelectors.ts`
 
 Datos por modulo:
 
 - `tests/fixtures/contactos/contactosData.ts`
 - `tests/fixtures/bienes/tipoBienData.ts`
 - `tests/fixtures/productos/productosData.ts`
+- `tests/fixtures/blanqueo/blanqueoData.ts`
 
 `tests/fixtures/testData.ts` queda como barrel de compatibilidad para exports existentes. No agregar datos nuevos ahi; los nuevos datos deben ir en la carpeta del modulo correspondiente.
 
@@ -200,6 +213,12 @@ Los selectores deben mantenerse en los archivos de `tests/utils/selectors/`. Ant
 - Contactos: `tests/features/contactos/contactos.feature`
 - Productos: `tests/features/productos/productos.feature`
 - Bienes: `tests/features/bienes/bienes.feature`
+- Blanqueo: `tests/features/blanqueo/blanqueo.feature`
+
+## Notas funcionales Blanqueo
+
+- `BLA-001`: crea un expediente de blanqueo desde la UI en `ACTION_BLANQUEO`, completa Titular, Fecha de Apertura, CNAE, Responsable y Observaciones, guarda y valida codigo automatico, NIF autocompletado, estado `Incompleto`, origen `Manual` y chatter visible.
+- La precondicion del titular con NIF se prepara desde la UI de Contactos para mantener la misma logica de automatizacion usada en los modulos anteriores.
 
 ## Notas funcionales Productos
 

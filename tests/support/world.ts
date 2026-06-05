@@ -24,6 +24,9 @@ import type {
   TipologiaProductoTestData
 } from '../fixtures/productos/productosData';
 import type {
+  ExpedienteBlanqueoTestData
+} from '../fixtures/blanqueo/blanqueoData';
+import type {
   BienDocumentosTestData,
   BienAgrupacionTestData,
   BienCargaHistoricoTestData,
@@ -52,6 +55,7 @@ import { ConfiguracionContactosPage } from '../pages/ConfiguracionContactosPage'
 import { ContactosPage } from '../pages/ContactosPage';
 import { LoginPage } from '../pages/LoginPage';
 import { BienesPage } from '../pages/BienesPage';
+import { BlanqueoPage } from '../pages/BlanqueoPage';
 import { ProductosPage } from '../pages/ProductosPage';
 
 export class CustomWorld extends World {
@@ -61,6 +65,7 @@ export class CustomWorld extends World {
   contactosPage!: ContactosPage;
   configuracionContactosPage!: ConfiguracionContactosPage;
   bienesPage!: BienesPage;
+  blanqueoPage!: BlanqueoPage;
   productosPage!: ProductosPage;
   currentPersonaFisica?: PersonaFisicaTestData;
   currentPersonaFisicaDocumento?: PersonaFisicaDocumentoTestData;
@@ -78,6 +83,7 @@ export class CustomWorld extends World {
   currentEmpresaInformeCliente?: EmpresaInformeClienteTestData;
   currentMaestroContactos?: MaestroContactosTestData;
   currentNaturalezaT4?: NaturalezaT4TestData;
+  currentExpedienteBlanqueo?: ExpedienteBlanqueoTestData;
   currentBienDocumentos?: BienDocumentosTestData;
   currentBienAgrupacion?: BienAgrupacionTestData;
   currentBienCargaHistorico?: BienCargaHistoricoTestData;
@@ -115,6 +121,7 @@ export class CustomWorld extends World {
     this.contactosPage = new ContactosPage(this.page);
     this.configuracionContactosPage = new ConfiguracionContactosPage(this.page);
     this.bienesPage = new BienesPage(this.page);
+    this.blanqueoPage = new BlanqueoPage(this.page);
     this.productosPage = new ProductosPage(this.page);
   }
 }

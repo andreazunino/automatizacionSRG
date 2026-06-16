@@ -88,6 +88,14 @@ El caso `BLA-001` valida crear un expediente de blanqueo con datos completos, co
 
 El titular del caso se crea previamente desde la UI de Contactos, manteniendo el mismo criterio usado por los modulos anteriores.
 
+El caso `BLA-002` queda documentado con `@no_automatizar @bug_bloqueante` porque el campo `Titular` no permite modificacion en la interfaz actual, impidiendo comprobar la actualizacion automatica del NIF.
+
+El caso `BLA-003` valida la busqueda por codigo de expediente, los filtros `Activos` y `Archivados`, y la limpieza final de filtros usando un expediente existente identificado dinamicamente.
+
+El caso `BLA-004` valida que no pueda guardarse un expediente sin `Titular`, completando solamente la `Fecha de Apertura`.
+
+El caso automatizado `BLA-010` valida que el stat button `Alerta Blanqueo` incremente y que la pestaña `Positivos de Blanqueo` permanezca vacia mientras las coincidencias generadas sigan en estado `Pendiente`. Solo deben aparecer en la pestaña al ser marcadas como `Positivo`.
+
 ## Estructura por modulo
 
 Cada modulo nuevo debe seguir esta forma:

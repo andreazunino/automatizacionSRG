@@ -219,6 +219,10 @@ Los selectores deben mantenerse en los archivos de `tests/utils/selectors/`. Ant
 
 - `BLA-001`: crea un expediente de blanqueo desde la UI en `ACTION_BLANQUEO`, completa Titular, Fecha de Apertura, CNAE, Responsable y Observaciones, guarda y valida codigo automatico, NIF autocompletado, estado `Incompleto`, origen `Manual` y chatter visible.
 - La precondicion del titular con NIF se prepara desde la UI de Contactos para mantener la misma logica de automatizacion usada en los modulos anteriores.
+- `BLA-002`: queda bloqueado con `@no_automatizar @bug_bloqueante` porque el campo `Titular` no permite modificacion y no puede validarse la actualizacion automatica del NIF.
+- `BLA-003`: valida la busqueda por codigo de expediente y los filtros `Activos` y `Archivados` del listado.
+- `BLA-004`: valida que el sistema impida guardar un expediente de blanqueo sin `Titular`.
+- `BLA-010`: automatiza que las coincidencias `Pendiente` incrementen `Alerta Blanqueo` y no aparezcan en la pestaña `Positivos de Blanqueo` hasta ser marcadas como `Positivo`.
 
 ## Notas funcionales Productos
 

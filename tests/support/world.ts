@@ -84,6 +84,7 @@ export class CustomWorld extends World {
   currentMaestroContactos?: MaestroContactosTestData;
   currentNaturalezaT4?: NaturalezaT4TestData;
   currentExpedienteBlanqueo?: ExpedienteBlanqueoTestData;
+  currentBlanqueoExpedienteCode?: string;
   currentBienDocumentos?: BienDocumentosTestData;
   currentBienAgrupacion?: BienAgrupacionTestData;
   currentBienCargaHistorico?: BienCargaHistoricoTestData;

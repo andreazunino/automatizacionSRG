@@ -8,6 +8,7 @@ import { BasePage } from './BasePage';
 export class BlanqueoPage extends BasePage {
   private createdCode?: string;
   private createdNif?: string;
+  private alertCountBeforeCheck?: number;
 
   constructor(page: Page) {
     super(page);
@@ -63,12 +64,162 @@ export class BlanqueoPage extends BasePage {
     await expect(this.page.locator(blanqueoSelectors.chatter).first()).toBeVisible();
   }
 
+  async firstVisibleExpedienteCode(): Promise<string> {
+    const row = this.expedienteRows().first();
+
+    await expect(row).toBeVisible();
+
+    const text = ((await row.textContent()) ?? '').trim();
+    const match = text.match(/EXPBLA\d{4,8}-\d+/i);
+
+    if (!match) {
+      throw new Error(`No se encontro un codigo de expediente de blanqueo en la primera fila: ${text}`);
+    }
+
+    return match[0];
+  }
+
+  async searchExpedienteByCode(code: string): Promise<void> {
+    await this.clearSearchAndFilters();
+
+    const searchInput = this.page.locator(blanqueoSelectors.searchInput).first();
+
+    await expect(searchInput).toBeVisible();
+    await searchInput.fill(code);
+    await searchInput.press('Enter');
+    await this.assertExpedienteAppears(code);
+  }
+
+  async assertExpedienteAppears(code: string): Promise<void> {
+    await expect(this.expedienteRows().filter({ hasText: code }).first()).toBeVisible();
+  }
+
+  async clearSearchAndFilters(): Promise<void> {
+    const removeFacetButtons = this.page.locator(blanqueoSelectors.removeSearchFacet);
+    const removeCount = await removeFacetButtons.count();
+
+    for (let index = removeCount - 1; index >= 0; index -= 1) {
+      await removeFacetButtons.nth(index).click();
+    }
+
+    const searchInput = this.page.locator(blanqueoSelectors.searchInput).first();
+
+    await expect(searchInput).toBeVisible();
+    await searchInput.fill('');
+    await searchInput.press('Enter');
+    await expect(this.page.locator(blanqueoSelectors.searchFacet)).toHaveCount(0);
+  }
+
+  async applyEstadoFilter(filterName: 'Activos' | 'Archivados'): Promise<void> {
+    await this.clearSearchAndFilters();
+
+    const filterButton = this.page.locator(blanqueoSelectors.filterButton).first();
+
+    await expect(filterButton).toBeVisible();
+    await filterButton.click();
+
+    const filter = this.page
+      .locator(`${blanqueoSelectors.visibleSearchMenu} [role="menuitem"], ${blanqueoSelectors.visibleSearchMenu} .dropdown-item`)
+      .filter({ hasText: new RegExp(`^\\s*${filterName}\\s*$`, 'i') })
+      .first();
+
+    await expect(filter).toBeVisible();
+    await filter.click();
+    await this.assertEstadoFilterApplied(filterName);
+  }
+
+  async assertEstadoFilterApplied(filterName: 'Activos' | 'Archivados'): Promise<void> {
+    await expect(this.page.locator(blanqueoSelectors.searchFacet).filter({ hasText: filterName }).first()).toBeVisible();
+    await expect(this.page.locator('.o_list_table, table').first()).toBeVisible();
+  }
+
+  async assertExpedientesListWithoutFilters(): Promise<void> {
+    await expect(this.page.locator(blanqueoSelectors.searchFacet)).toHaveCount(0);
+    await expect(this.page.locator('.o_list_table, table').first()).toBeVisible();
+  }
+
+  async trySaveExpedienteWithoutTitular(): Promise<void> {
+    await this.navigateToBlanqueo();
+    await this.click(blanqueoSelectors.newButton);
+    await expect(this.page).toHaveURL(/\/new(?:$|[/?#])/);
+
+    await this.fillDateIfNeeded(
+      blanqueoSelectors.fechaAperturaInput,
+      blanqueoSelectors.labels.fechaApertura,
+      this.todayAsSpanishDate()
+    );
+    await this.saveCurrentFormExpectingValidation();
+  }
+
+  async assertTitularRequiredValidation(): Promise<void> {
+    await expect(this.page).toHaveURL(/\/new(?:$|[/?#])/);
+    await expect
+      .poll(async () => this.hasTitularRequiredValidation(), {
+        message: 'Esperaba validacion de Titular obligatorio en el expediente de blanqueo.'
+      })
+      .toBeTruthy();
+  }
+
+  async prepareExpedienteForSanctionsCheck(): Promise<void> {
+    await this.navigateToBlanqueo();
+    await this.page.locator(blanqueoSelectors.alertasMenu).first().click();
+    await expect(this.page.locator(blanqueoSelectors.groupRows).first()).toBeVisible();
+
+    const titular = await this.firstTitularWithAlerts();
+
+    await this.navigateToBlanqueo();
+    await this.click(blanqueoSelectors.newButton);
+    await this.selectAutocompleteField(blanqueoSelectors.titularInput, blanqueoSelectors.labels.titular, titular);
+    await this.fillDateIfNeeded(
+      blanqueoSelectors.fechaAperturaInput,
+      blanqueoSelectors.labels.fechaApertura,
+      this.todayAsSpanishDate()
+    );
+    await this.saveCurrentForm('Esperaba guardar el expediente preparado para BLA-010.');
+    await expect(this.page.locator(blanqueoSelectors.comprobarBlanqueoButton).first()).toBeVisible();
+
+    this.alertCountBeforeCheck = await this.alertaBlanqueoCount();
+    await this.assertPositivosTabIsEmpty();
+  }
+
+  async runComprobarBlanqueo(): Promise<void> {
+    const button = this.page.locator(blanqueoSelectors.comprobarBlanqueoButton).first();
+
+    await expect(button).toBeVisible();
+    await button.click();
+  }
+
+  async assertAlertaBlanqueoCountIncreased(): Promise<void> {
+    if (this.alertCountBeforeCheck === undefined) {
+      throw new Error('No se registro el contador inicial de Alerta Blanqueo.');
+    }
+
+    await expect
+      .poll(async () => this.alertaBlanqueoCount(), {
+        message: 'Esperaba que el contador Alerta Blanqueo incrementara despues de Comprobar Blanqueo.',
+        timeout: 30000
+      })
+      .toBeGreaterThan(this.alertCountBeforeCheck);
+  }
+
+  async assertPositivosTabIsEmpty(): Promise<void> {
+    const tab = this.page.locator(blanqueoSelectors.positivosTab).first();
+
+    await expect(tab).toBeVisible();
+    await tab.click();
+    await expect(this.page.locator(blanqueoSelectors.positivosRows)).toHaveCount(0);
+  }
+
   currentExpedienteCode(): string | undefined {
     return this.createdCode;
   }
 
   currentNifValue(): string | undefined {
     return this.createdNif;
+  }
+
+  private expedienteRows(): Locator {
+    return this.page.locator(blanqueoSelectors.rows);
   }
 
   private async selectCurrentUserIfEmpty(fallbackValue: string): Promise<void> {
@@ -316,6 +467,64 @@ export class BlanqueoPage extends BasePage {
       .toBeTruthy();
   }
 
+  private async saveCurrentFormExpectingValidation(): Promise<void> {
+    const saveButton = this.page.locator(blanqueoSelectors.saveButton).first();
+
+    await expect(saveButton).toBeVisible();
+    await saveButton.click();
+  }
+
+  private async hasTitularRequiredValidation(): Promise<boolean> {
+    const validationText = await this.page.locator(blanqueoSelectors.validationText).allTextContents();
+    const pageText = await this.page.locator('body').innerText();
+    const titularField = this.page.locator(blanqueoSelectors.titularField).first();
+    const titularInvalidLabel = this.page
+      .locator(blanqueoSelectors.titularInvalidLabel)
+      .filter({ hasText: /Titular/i })
+      .first();
+    const text = [...validationText, pageText].join(' ');
+
+    return (
+      ((await titularField.getAttribute('class').catch(() => '')) ?? '').includes('o_field_invalid') ||
+      (await titularInvalidLabel.isVisible().catch(() => false)) ||
+      (/Titular/i.test(text) && /obligator|required|requerid|faltan campos/i.test(text))
+    );
+  }
+
+  private async firstTitularWithAlerts(): Promise<string> {
+    const groups = this.page.locator(blanqueoSelectors.groupRows);
+    const groupCount = await groups.count();
+
+    for (let index = 0; index < groupCount; index += 1) {
+      const group = groups.nth(index);
+      const groupText = ((await group.innerText()) || '').replace(/\s+/g, ' ').trim();
+      const titular = groupText.replace(/\s*\(\d+\)\s*$/, '').trim();
+
+      if (titular && !/^Ninguno$/i.test(titular)) {
+        return titular;
+      }
+    }
+
+    throw new Error('No se encontro un Titular agrupado en Alertas de Blanqueo.');
+  }
+
+  private async alertaBlanqueoCount(): Promise<number> {
+    const button = this.page.locator(blanqueoSelectors.alertaBlanqueoButton).first();
+
+    await expect(button).toBeVisible();
+
+    const statText =
+      ((await button.locator(blanqueoSelectors.statValue).first().textContent().catch(() => '')) ?? '') ||
+      ((await button.textContent()) ?? '');
+    const match = statText.match(/\d+/);
+
+    if (!match) {
+      throw new Error(`No se pudo leer el contador Alerta Blanqueo: ${statText}`);
+    }
+
+    return Number(match[0]);
+  }
+
   private autocompleteOptions(): Locator {
     return this.page.locator(blanqueoSelectors.autocompleteOption);
   }
@@ -349,6 +558,14 @@ export class BlanqueoPage extends BasePage {
 
   private normalizeDate(value: string): string {
     return value.replace(/\D/g, '');
+  }
+
+  private todayAsSpanishDate(): string {
+    const today = new Date();
+    const day = today.getDate().toString().padStart(2, '0');
+    const month = (today.getMonth() + 1).toString().padStart(2, '0');
+
+    return `${day}/${month}/${today.getFullYear()}`;
   }
 
   private escapeRegExp(value: string): string {

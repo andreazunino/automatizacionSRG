@@ -3,6 +3,21 @@ import { odooCommonSelectors } from './odooCommonSelectors';
 export const blanqueoSelectors = {
   ...odooCommonSelectors,
   pageTitleText: /Blanqueo|Exp\.?\s*Blanqueo|Expedientes de blanqueo/i,
+  rows: '.o_list_table tbody tr.o_data_row, tbody tr.o_data_row, .o_data_row',
+  searchFacet: '.o_searchview_facet',
+  removeSearchFacet: '.o_searchview_facet .o_facet_remove, .o_searchview_facet .oi-close',
+  visibleSearchMenu: '.dropdown-menu:visible',
+  titularField: 'div[name="partner_id"], div[name="titular_id"], div[name="holder_id"], div[name="contact_id"]',
+  titularInvalidLabel: 'label.o_field_invalid',
+  alertasMenu: 'a:has-text("Alertas de Blanqueo"), button:has-text("Alertas de Blanqueo")',
+  groupRows: 'tbody tr.o_group_header, .o_group_header',
+  comprobarBlanqueoButton: 'button:has-text("Comprobar Blanqueo")',
+  alertaBlanqueoButton:
+    '.oe_stat_button:has-text("Alerta Blanqueo"), button:has-text("Alerta Blanqueo"), a:has-text("Alerta Blanqueo")',
+  statValue: '.o_stat_value, .stat_value, [class*="stat_value"]',
+  positivosTab: '[role="tab"]:has-text("Positivos de Blanqueo"), a:has-text("Positivos de Blanqueo")',
+  positivosRows:
+    'div[name="real_match_ids"] tbody tr.o_data_row, div[name="positive_ids"] tbody tr.o_data_row, div[name="positivos_ids"] tbody tr.o_data_row',
   codeValue:
     'div[name="name"], div[name="code"], div[name="codigo_expediente"], div[name="aml_code"], span[name="name"], span[name="code"], span[name="codigo_expediente"], span[name="aml_code"], input[name="name"], input[name="code"], input[name="codigo_expediente"], input[name="aml_code"], h1',
   titularInput:
